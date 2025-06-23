@@ -12,9 +12,19 @@ function TodoApp() {
   const { user } = useAuth();
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
+  // 添加新的状态来管理选中的类型
+  const [newTodoType, setNewTodoType] = useState('record');
   const [filter, setFilter] = useState('all'); // all, active, completed
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 定义类型选项
+  const todoTypes = [
+    { value: 'record', label: '记录', color: 'bg-blue-100 text-blue-800' },
+    { value: 'requirement', label: '需求', color: 'bg-green-100 text-green-800' },
+    { value: 'task', label: '任务', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'issue', label: '故障', color: 'bg-red-100 text-red-800' }
+  ];
   
   // 添加确认弹框状态
   const [confirmDialog, setConfirmDialog] = useState({
@@ -49,8 +59,12 @@ function TodoApp() {
     if (!newTodo.trim()) return;
 
     try {
-      await todoAPI.createTodo({ title: newTodo.trim() });
+      await todoAPI.createTodo({ 
+        title: newTodo.trim(),
+        todo_type: newTodoType
+      });
       setNewTodo('');
+      setNewTodoType('record'); // 重置为默认值
       fetchTodos();
     } catch (error) {
       console.error('添加 todo 失败:', error);
@@ -184,6 +198,18 @@ function TodoApp() {
                 placeholder="添加新任务..."
                 className="macos-input flex-1"
               />
+              {/* 新增类型选择下拉框 */}
+              <select
+                value={newTodoType}
+                onChange={(e) => setNewTodoType(e.target.value)}
+                className="macos-input w-24 text-sm"
+              >
+                {todoTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 className="macos-button-primary flex items-center gap-2"
@@ -290,6 +316,16 @@ function TodoApp() {
                     >
                       {todo.title}
                     </span>
+                    
+                    {/* 类型标签 */}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        todoTypes.find(type => type.value === (todo.todo_type || 'record'))?.color || 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {todoTypes.find(type => type.value === (todo.todo_type || 'record'))?.label || '记录'}
+                    </span>
+                    
                     {/* 动态图标：根据删除状态显示不同图标 */}
                     {todo.is_deleted ? (
                       <button
