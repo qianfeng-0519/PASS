@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Check, Trash2, RotateCcw } from 'lucide-react';
 import { todoAPI } from '../services/api';
+import ConfirmDialog from './ConfirmDialog';
 
 // 在 TodoApp 组件开头添加认证支持
 import { useAuth } from './AuthContext';
@@ -14,6 +15,13 @@ function TodoApp() {
   const [filter, setFilter] = useState('all'); // all, active, completed
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 添加确认弹框状态
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    todoId: null,
+    todoTitle: ''
+  });
 
   // 获取 todos
   const fetchTodos = async () => {
@@ -90,13 +98,66 @@ function TodoApp() {
   };
 
   // 添加还原todo的处理函数
+  // 在现有的 confirmDialog 状态管理函数后添加
+  
+  // 显示通知消息（替换 alert）
+  const showNotification = (title, message, type = 'error') => {
+    setConfirmDialog({
+      isOpen: true,
+      title: title,
+      message: message,
+      type: type,
+      showCancelButton: false,  // 只显示确认按钮
+      onConfirm: () => setConfirmDialog({ isOpen: false }),
+      onCancel: () => setConfirmDialog({ isOpen: false })
+    });
+  };
+  
+  // 修改 handleRestoreTodo 函数中的 alert 调用
   const handleRestoreTodo = async (id) => {
     try {
       await todoAPI.restoreTodo(id);
-      await fetchTodos(); // 重新获取数据
+      fetchTodos();
     } catch (error) {
       console.error('还原任务失败:', error);
-      alert('还原任务失败，请重试');
+      // 替换原来的 alert('还原任务失败，请重试');
+      showNotification('操作失败', '还原任务失败，请重试', 'error');
+    }
+  };
+  
+  // 修改 ConfirmDialog 组件的渲染，添加新的属性
+  <ConfirmDialog
+    isOpen={confirmDialog.isOpen}
+    title={confirmDialog.title}
+    message={confirmDialog.message}
+    type={confirmDialog.type || 'warning'}
+    showCancelButton={confirmDialog.showCancelButton !== false}  // 默认显示取消按钮
+    onConfirm={confirmDialog.onConfirm}
+    onClose={confirmDialog.onCancel || (() => setConfirmDialog({ isOpen: false }))}
+  />
+  
+  // 添加显示删除确认弹框的函数
+  const showDeleteConfirm = (todo) => {
+    setConfirmDialog({
+      isOpen: true,
+      todoId: todo.id,
+      todoTitle: todo.title
+    });
+  };
+
+  // 添加关闭确认弹框的函数
+  const closeDeleteConfirm = () => {
+    setConfirmDialog({
+      isOpen: false,
+      todoId: null,
+      todoTitle: ''
+    });
+  };
+
+  // 添加确认删除的函数
+  const confirmDelete = () => {
+    if (confirmDialog.todoId) {
+      handleDeleteTodo(confirmDialog.todoId);
     }
   };
 
@@ -240,7 +301,7 @@ function TodoApp() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleDeleteTodo(todo.id)}
+                        onClick={() => showDeleteConfirm(todo)}
                         className="text-macos-gray-400 hover:text-red-500 transition-colors"
                         title="删除任务"
                       >
@@ -260,6 +321,17 @@ function TodoApp() {
             </div>
           )}
         </motion.div>
+        
+        {/* 添加确认弹框 */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={closeDeleteConfirm}
+          onConfirm={confirmDelete}
+          title="确认删除任务"
+          message={`确定要删除任务"${confirmDialog.todoTitle}"吗？删除后管理员才能恢复。`}
+          confirmText="删除"
+          cancelText="取消"
+        />
       </div>
     </div>
   );

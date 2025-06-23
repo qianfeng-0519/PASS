@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 import { Users, Search, MoreVertical, Shield, ShieldOff, Trash2, BarChart3, Key, UserCog } from 'lucide-react';
+import ConfirmDialog from './ConfirmDialog';
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -10,6 +11,52 @@ function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // 添加 ConfirmDialog 状态管理
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    showCancelButton: true,
+    onConfirm: () => {},
+    onClose: () => {}
+  });
+
+  // 显示通知消息的函数
+  const showNotification = (title, message, type = 'info') => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      type,
+      showCancelButton: false,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      },
+      onClose: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // 显示确认对话框的函数
+  const showConfirmDialog = (title, message, onConfirm, type = 'warning') => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      type,
+      showCancelButton: true,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      onClose: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
 
   // 获取用户统计
   const fetchStats = async () => {
@@ -49,7 +96,7 @@ function AdminDashboard() {
       fetchUsers(currentPage); // 刷新列表
     } catch (error) {
       console.error('切换用户状态失败:', error);
-      alert('操作失败，请重试');
+      showNotification('操作失败', '操作失败，请重试', 'error');
     }
   };
 
@@ -64,23 +111,40 @@ function AdminDashboard() {
   
   // 删除用户函数（修复）
   const deleteUser = async (userId) => {
-    if (!confirm('确定要删除这个用户吗？此操作不可恢复。')) {
-      return;
-    }
+    const performDelete = async () => {
+      try {
+        await authAPI.deleteUser(userId);
+        // 删除成功后刷新列表
+        await fetchUsers(currentPage);
+        await fetchStats();
+        showNotification('删除成功', '用户删除成功', 'success');
+        setOpenDropdown(null); // 关闭下拉菜单
+      } catch (error) {
+        console.error('删除用户失败:', error);
+        showNotification('删除失败', '删除失败：' + (error.response?.data?.error || '请重试'), 'error');
+      }
+    };
     
-    try {
-      await authAPI.deleteUser(userId);
-      // 删除成功后刷新列表
-      await fetchUsers(currentPage);
-      await fetchStats();
-      alert('用户删除成功');
-      setOpenDropdown(null); // 关闭下拉菜单
-    } catch (error) {
-      console.error('删除用户失败:', error);
-      alert('删除失败：' + (error.response?.data?.error || '请重试'));
-    }
+    showConfirmDialog(
+      '确认删除',
+      '确定要删除这个用户吗？此操作不可恢复。',
+      performDelete,
+      'warning'
+    );
   };
 
+  // 修改重置密码函数
+const resetUserPassword = async () => {
+    try {
+      await authAPI.resetUserPassword(selectedUser.id);
+      showNotification('重置成功', '密码已重置为：Pwd123456', 'success');
+      setShowPasswordModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('重置密码失败:', error);
+      showNotification('重置失败', '重置密码失败：' + (error.response?.data?.error || '请重试'), 'error');
+    }
+  };
   
   // 更新角色函数（修复）
   const updateUserRole = async () => {
@@ -89,7 +153,7 @@ function AdminDashboard() {
         is_staff: selectedRole === 'admin',
         is_superuser: selectedRole === 'superuser'
       });
-      alert('角色更新成功');
+      showNotification('更新成功', '角色更新成功', 'success');
       setShowRoleModal(false);
       setSelectedUser(null);
       setSelectedRole('');
@@ -97,7 +161,7 @@ function AdminDashboard() {
       await fetchStats();
     } catch (error) {
       console.error('更新角色失败:', error);
-      alert('更新角色失败：' + (error.response?.data?.error || '请重试'));
+      showNotification('更新失败', '更新角色失败：' + (error.response?.data?.error || '请重试'), 'error');
     }
   };
 
@@ -228,10 +292,13 @@ function AdminDashboard() {
                   权限
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Todo数量
+                  有效Todo数量
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   注册时间
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  最后登录
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   操作
@@ -241,13 +308,13 @@ function AdminDashboard() {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                     加载中...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                     没有找到用户
                   </td>
                 </tr>
@@ -283,12 +350,14 @@ function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.todo_count}
+                      {user.todos_count || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.date_joined).toLocaleDateString('zh-CN')}
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'}
                     </td>
-
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.last_login_time ? new Date(user.last_login_time).toLocaleDateString('zh-CN') : '从未登录'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="relative">
                         <button
@@ -366,7 +435,7 @@ function AdminDashboard() {
                 重置密码 - {selectedUser?.username}
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                确定要重置该用户的密码吗？密码将被重置为：12345678
+                确定要重置该用户的密码吗？密码将被重置为：Pwd123456
               </p>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
@@ -478,43 +547,20 @@ function AdminDashboard() {
           </div>
         )}
       </div>
+      
+      {/* 添加 ConfirmDialog 组件 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.onClose}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        showCancelButton={confirmDialog.showCancelButton}
+      />
     </div>
   );
 }
-
-
-
-// 修改重置密码函数
-const resetUserPassword = async () => {
-  try {
-    await authAPI.resetUserPassword(selectedUser.id);
-    alert('密码已重置为：12345678');
-    setShowPasswordModal(false);
-    setSelectedUser(null);
-  } catch (error) {
-    console.error('重置密码失败:', error);
-    alert('重置密码失败：' + (error.response?.data?.error || '请重试'));
-  }
-};
-
-// 修改更新角色函数（移除超级管理员选项）
-const updateUserRole = async () => {
-  try {
-    await authAPI.updateUserRole(selectedUser.id, {
-      is_staff: selectedRole === 'admin',
-      is_superuser: false // 始终设为false，不允许设置超级管理员
-    });
-    alert('角色更新成功');
-    setShowRoleModal(false);
-    setSelectedUser(null);
-    setSelectedRole('');
-    await fetchUsers(currentPage);
-    await fetchStats();
-  } catch (error) {
-    console.error('更新角色失败:', error);
-    alert('更新角色失败：' + (error.response?.data?.error || '请重试'));
-  }
-};
 
 
 export default AdminDashboard;

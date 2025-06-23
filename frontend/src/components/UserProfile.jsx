@@ -5,10 +5,8 @@ const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    first_name: '',
-    last_name: ''
+    nickname: '',
+    email: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,10 +21,8 @@ const UserProfile = () => {
       const response = await authAPI.getCurrentUser();
       setUser(response.data);
       setFormData({
-        username: response.data.username,
-        email: response.data.email,
-        first_name: response.data.first_name || '',
-        last_name: response.data.last_name || ''
+        nickname: response.data.nickname || '',
+        email: response.data.email
       });
     } catch (err) {
       setError('加载用户信息失败');
@@ -52,7 +48,25 @@ const UserProfile = () => {
       setEditing(false);
       setSuccess('个人信息更新成功');
     } catch (err) {
-      setError(err.response?.data?.detail || '更新失败');
+      // 改进错误处理，显示具体错误信息
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        if (typeof errorData === 'object') {
+          const errorMessages = [];
+          Object.keys(errorData).forEach(key => {
+            if (Array.isArray(errorData[key])) {
+              errorMessages.push(`${key}: ${errorData[key].join(', ')}`);
+            } else {
+              errorMessages.push(`${key}: ${errorData[key]}`);
+            }
+          });
+          setError(errorMessages.join('; '));
+        } else {
+          setError(errorData.detail || errorData.message || '更新失败');
+        }
+      } else {
+        setError('更新失败，请稍后重试');
+      }
     } finally {
       setLoading(false);
     }
@@ -78,17 +92,11 @@ const UserProfile = () => {
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
             >
               编辑
             </button>
           )}
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-          >
-            登出
-          </button>
         </div>
       </div>
 
@@ -108,13 +116,20 @@ const UserProfile = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">用户名</label>
+            <p className="mt-1 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
+              {user.username} (不可修改)
+            </p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">昵称</label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
+              name="nickname"
+              value={formData.nickname}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              required
+              placeholder="请输入昵称"
             />
           </div>
           
@@ -130,33 +145,11 @@ const UserProfile = () => {
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">姓</label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">名</label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
           <div className="flex space-x-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? '保存中...' : '保存'}
             </button>
@@ -167,7 +160,7 @@ const UserProfile = () => {
                 setError('');
                 setSuccess('');
               }}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+              className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
             >
               取消
             </button>
@@ -181,15 +174,13 @@ const UserProfile = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">邮箱</label>
-            <p className="mt-1 text-sm text-gray-900">{user.email}</p>
+            <label className="block text-sm font-medium text-gray-700">昵称</label>
+            <p className="mt-1 text-sm text-gray-900">{user.nickname || '未设置'}</p>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">姓名</label>
-            <p className="mt-1 text-sm text-gray-900">
-              {user.first_name || user.last_name ? `${user.first_name} ${user.last_name}`.trim() : '未设置'}
-            </p>
+            <label className="block text-sm font-medium text-gray-700">邮箱</label>
+            <p className="mt-1 text-sm text-gray-900">{user.email}</p>
           </div>
           
           <div>
@@ -204,7 +195,7 @@ const UserProfile = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">注册时间</label>
             <p className="mt-1 text-sm text-gray-900">
-              {new Date(user.date_joined).toLocaleString('zh-CN')}
+              {user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '未知'}
             </p>
           </div>
         </div>

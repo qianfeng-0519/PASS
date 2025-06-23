@@ -164,8 +164,8 @@ export const authAPI = {
   
   // 管理员API - 重置用户密码（修改为固定密码重置）
   resetUserPassword: (userId) => api.post(`/auth/admin/users/${userId}/reset-password/`, {
-    new_password: '12345678',
-    confirm_password: '12345678'
+    new_password: 'Pwd123456',
+    confirm_password: 'Pwd123456'
   }),
   
   // 管理员API - 更新用户角色（移除超级管理员选项）

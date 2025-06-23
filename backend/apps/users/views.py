@@ -67,6 +67,16 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         if self.request.method == 'PUT' or self.request.method == 'PATCH':
             return UserProfileUpdateSerializer
         return UserSerializer
+    
+    def update(self, request, *args, **kwargs):
+        # 使用 UserProfileUpdateSerializer 进行数据验证和更新
+        serializer = self.get_serializer(self.get_object(), data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        # 更新成功后，使用 UserSerializer 返回完整的用户信息
+        user_serializer = UserSerializer(self.get_object())
+        return Response(user_serializer.data)
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
