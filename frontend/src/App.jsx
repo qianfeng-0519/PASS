@@ -29,7 +29,7 @@ function Sidebar() {
     <div className="w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col">
       {/* 应用标题 */}
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">Todo 应用</h1>
+        <h1 className="text-xl font-semibold text-gray-800">PASS-星舰</h1>
         {user && (
           <p className="text-sm text-gray-600 mt-1">欢迎, {user.username}</p>
         )}
