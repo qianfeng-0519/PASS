@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// Use environment variable for API base URL, with a fallback for local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -162,41 +163,16 @@ export const authAPI = {
   // 管理员API - 删除用户（保留这个，删除下面重复的）
   deleteUser: (userId) => api.delete(`/auth/admin/users/${userId}/delete/`),
   
-  // 管理员API - 重置用户密码（修改为固定密码重置）
-  resetUserPassword: (userId) => api.post(`/auth/admin/users/${userId}/reset-password/`, {
-    new_password: 'Pwd123456',
-    confirm_password: 'Pwd123456'
-  }),
+  // 管理员API - 重置用户密码
+  // Accepts userId and an object { new_password, confirm_password }
+  resetUserPassword: (userId, passwordData) => api.post(`/auth/admin/users/${userId}/reset-password/`, passwordData),
   
   // 管理员API - 更新用户角色（移除超级管理员选项）
   updateUserRole: (userId, roleData) => api.post(`/auth/admin/users/${userId}/update-role/`, roleData),
-  
-  // 删除这些重复的定义：
-  // deleteUser: (userId) => api.delete(`/auth/admin/users/${userId}/`),
-  // resetUserPassword: (userId, passwordData) => api.post(`/auth/admin/users/${userId}/reset-password/`, passwordData),
-  // updateUserRole: (userId, roleData) => api.post(`/auth/admin/users/${userId}/update-role/`, roleData),
 };
 
-// 管理员 API
-export const adminAPI = {
-  // 获取用户统计
-  getUserStats: () => api.get('/users/admin/stats/'),
-  
-  // 获取用户列表
-  getUsers: (params = {}) => api.get('/users/admin/users/', { params }),
-  
-  // 获取用户详情
-  getUserDetail: (userId) => api.get(`/users/admin/users/${userId}/`),
-  
-  // 更新用户信息
-  updateUser: (userId, userData) => api.put(`/users/admin/users/${userId}/`, userData),
-  
-  // 切换用户状态
-  toggleUserStatus: (userId) => api.post(`/users/admin/users/${userId}/toggle-status/`),
-  
-  // 删除用户
-  deleteUser: (userId) => api.delete(`/users/admin/users/${userId}/delete/`),
-};
+// Note: adminAPI object was removed as it was redundant and used incorrect paths.
+// All its functionalities are correctly implemented in authAPI.
 
 // Todo API (保持原有功能)
 export const todoAPI = {
@@ -247,7 +223,10 @@ export const authUtils = {
       case 'superuser':
         return userInfo.is_superuser;
       default:
-        return true;
+        // Defaulting to false for unknown permissions is safer.
+        // Consider if specific, named permissions are needed beyond admin/superuser.
+        console.warn(`Unknown permission check: ${permission}`);
+        return false;
     }
   },
   

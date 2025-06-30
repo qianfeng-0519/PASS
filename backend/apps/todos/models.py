@@ -28,8 +28,8 @@ class Todo(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        default=1,
-        related_name='todos',  # ✅ 添加related_name
+        # default=1, # Removed default, created_by should always be set by the application logic
+        related_name='todos',
         verbose_name="创建人",
         help_text="任务创建者"
     )

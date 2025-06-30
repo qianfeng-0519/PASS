@@ -65,6 +65,7 @@ function AdminDashboard() {
       setStats(response.data);
     } catch (error) {
       console.error('获取统计数据失败:', error);
+      showNotification('加载失败', '获取用户统计数据失败，请稍后重试。', 'error');
     }
   };
 
@@ -84,6 +85,7 @@ function AdminDashboard() {
       setCurrentPage(page);
     } catch (error) {
       console.error('获取用户列表失败:', error);
+      showNotification('加载失败', '获取用户列表失败，请稍后重试。', 'error');
     } finally {
       setLoading(false);
     }
@@ -105,8 +107,11 @@ function AdminDashboard() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  // States for the password reset modal
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const [selectedRole, setSelectedRole] = useState('');
   
   // 删除用户函数（修复）
@@ -134,15 +139,47 @@ function AdminDashboard() {
   };
 
   // 修改重置密码函数
-const resetUserPassword = async () => {
+  const resetUserPassword = async () => {
+    setPasswordError(''); // Reset error message
+    if (!newPassword || !confirmPassword) {
+      setPasswordError('新密码和确认密码不能为空。');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('两次输入的密码不匹配。');
+      return;
+    }
+    // Basic password strength check (example: at least 8 characters)
+    if (newPassword.length < 8) {
+      setPasswordError('新密码长度至少为8位。');
+      return;
+    }
+
     try {
-      await authAPI.resetUserPassword(selectedUser.id);
-      showNotification('重置成功', '密码已重置为：Pwd123456', 'success');
+      await authAPI.resetUserPassword(selectedUser.id, {
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      showNotification('重置成功', `用户 ${selectedUser.username} 的密码已成功重置。`, 'success');
       setShowPasswordModal(false);
       setSelectedUser(null);
+      setNewPassword(''); // Clear password fields
+      setConfirmPassword('');
     } catch (error) {
       console.error('重置密码失败:', error);
-      showNotification('重置失败', '重置密码失败：' + (error.response?.data?.error || '请重试'), 'error');
+      const backendError = error.response?.data;
+      if (backendError && typeof backendError === 'object') {
+        // Extract DRF validation errors
+        let errorMessages = [];
+        for (const key in backendError) {
+          if (Array.isArray(backendError[key])) {
+            errorMessages = errorMessages.concat(backendError[key]);
+          }
+        }
+        setPasswordError(errorMessages.join(' ') || '重置密码失败，请检查输入。');
+      } else {
+        setPasswordError('重置密码失败：' + (error.response?.data?.error || error.message || '请重试'));
+      }
     }
   };
   
@@ -431,17 +468,54 @@ const resetUserPassword = async () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 重置密码 - {selectedUser?.username}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                确定要重置该用户的密码吗？密码将被重置为：Pwd123456
-              </p>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    新密码
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="输入新密码"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    确认新密码
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="再次输入新密码"
+                  />
+                </div>
+                {passwordError && (
+                  <p className="text-xs text-red-600">{passwordError}</p>
+                )}
+              </div>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => {
                     setShowPasswordModal(false);
                     setSelectedUser(null);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    setPasswordError('');
                   }}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
@@ -451,7 +525,7 @@ const resetUserPassword = async () => {
                   onClick={resetUserPassword}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
-                  确认重置
+                  重置密码
                 </button>
               </div>
             </div>

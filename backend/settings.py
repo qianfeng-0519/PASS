@@ -5,12 +5,17 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mv4jjws+m#t7v+)!na0cgkdh*@gqxvch!=*wlm8oj+j5_@+d(s'
+# It's recommended to load the secret key from an environment variable
+# Example: SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'a-default-fallback-key-if-not-set')
+SECRET_KEY = 'django-insecure-mv4jjws+m#t7v+)!na0cgkdh*@gqxvch!=*wlm8oj+j5_@+d(s'  # Keep original for now, user must change
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Recommended: DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = False # Default to False for production readiness
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS should be configured for your production domain(s)
+# Example: ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1'] # Example, adjust as needed
 
 # Application definition
 INSTALLED_APPS = [
@@ -150,11 +155,15 @@ SIMPLE_JWT = {
 }
 
 # CORS settings
+# CORS_ALLOWED_ORIGINS should be set to your frontend's production URL
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:3000", # For local development React frontend
+    "http://127.0.0.1:3000", # For local development React frontend
+    # e.g., "https://yourfrontenddomain.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-# For development only - allows all origins
-CORS_ALLOW_ALL_ORIGINS = True
+# For development only - allows all origins. Set to False in production.
+CORS_ALLOW_ALL_ORIGINS = False # More secure default
+# If you need to allow all origins for development, you can temporarily set this to True
+# or preferably manage this through environment-specific settings.
