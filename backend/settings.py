@@ -11,7 +11,7 @@ SECRET_KEY = 'django-insecure-mv4jjws+m#t7v+)!na0cgkdh*@gqxvch!=*wlm8oj+j5_@+d(s
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Recommended: DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
-DEBUG = False # Default to False for production readiness
+DEBUG = True # Default to False for production readiness
 
 # ALLOWED_HOSTS should be configured for your production domain(s)
 # Example: ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
@@ -159,7 +159,8 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # For local development React frontend
     "http://127.0.0.1:3000", # For local development React frontend
-    # e.g., "https://yourfrontenddomain.com",
+    "http://localhost:5173", # For Vite development server
+    "http://127.0.0.1:5173", # For Vite development server
 ]
 
 CORS_ALLOW_CREDENTIALS = True
