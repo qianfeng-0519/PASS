@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .models import Todo
 from .serializers import TodoSerializer
+from backend.apps.users.views import IsAdminUser # Import IsAdminUser
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -18,6 +19,9 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 class TodoViewSet(viewsets.ModelViewSet):
     serializer_class = TodoSerializer
+    # IsOwnerOrAdmin handles general object-level permissions (owner or admin)
+    # IsAuthenticated ensures user is logged in.
+    # Specific admin-only actions will use IsAdminUser decorator.
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     
     def get_queryset(self):
@@ -82,15 +86,10 @@ class TodoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(todo)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser]) # Use IsAdminUser
     def restore(self, request, pk=None):
         """恢复已删除的任务（仅管理员）"""
-        if not request.user.is_staff:
-            return Response(
-                {'error': '只有管理员可以恢复已删除的任务'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
+        # No need for manual is_staff check, IsAdminUser permission handles it.
         todo = self.get_object()
         if not todo.is_deleted:
             return Response(
@@ -144,15 +143,10 @@ class TodoViewSet(viewsets.ModelViewSet):
             'deleted_count': updated_count
         })
     
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser]) # Use IsAdminUser
     def deleted_list(self, request):
         """获取已删除的任务列表（仅管理员）"""
-        if not request.user.is_staff:
-            return Response(
-                {'error': '只有管理员可以查看已删除的任务'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
+        # No need for manual is_staff check, IsAdminUser permission handles it.
         deleted_todos = Todo.objects.filter(is_deleted=True).order_by('-updated_at')
         serializer = self.get_serializer(deleted_todos, many=True)
         return Response({
@@ -160,15 +154,10 @@ class TodoViewSet(viewsets.ModelViewSet):
             'results': serializer.data
         })
     
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser]) # Use IsAdminUser
     def batch_restore(self, request):
         """批量恢复已删除的任务（仅管理员）"""
-        if not request.user.is_staff:
-            return Response(
-                {'error': '只有管理员可以批量恢复任务'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
+        # No need for manual is_staff check, IsAdminUser permission handles it.
         todo_ids = request.data.get('todo_ids', [])
         if not todo_ids:
             return Response(

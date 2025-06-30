@@ -1,6 +1,6 @@
-import React, { useContext } from 'react'; // 引入 useContext
+import React from 'react'; // useContext no longer directly used here
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './components/AuthContext'; // 引入 AuthContext
+import { AuthProvider, useAuth } from './components/AuthContext'; // Import useAuth
 import Login from './components/Login';
 import Register from './components/Register';
 import UserProfile from './components/UserProfile';
@@ -11,7 +11,7 @@ import './App.css';
 
 // 侧边栏导航组件
 function Sidebar() {
-  const { user, logout } = useContext(AuthContext); // 使用 useContext(AuthContext)
+  const { user, logout } = useAuth(); // Use the useAuth hook
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
@@ -130,7 +130,7 @@ function MainContent() {
 
 // 主应用布局组件
 function AppLayout() {
-  const { user, loading } = useContext(AuthContext); // 使用 useContext(AuthContext)
+  const { user, loading } = useAuth(); // Use the useAuth hook
   const location = useLocation();
 
   // 不需要侧边栏的页面

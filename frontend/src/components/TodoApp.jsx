@@ -43,7 +43,8 @@ function TodoApp() {
       });
       setTodos(response.data.results || response.data);
     } catch (error) {
-      console.error('获取 todos 失败:', error);
+      console.error('获取 todos 失败:', error); // Keep console.error for debugging, but also show user notification
+      showNotification('加载失败', error.response?.data?.detail || '获取任务列表失败，请稍后重试。', 'error');
     } finally {
       setLoading(false);
     }
@@ -66,8 +67,10 @@ function TodoApp() {
       setNewTodo('');
       setNewTodoType('record'); // 重置为默认值
       fetchTodos();
+      showNotification('操作成功', '新任务已添加。', 'success');
     } catch (error) {
       console.error('添加 todo 失败:', error);
+      showNotification('操作失败', error.response?.data?.detail || '添加任务失败，请重试。', 'error');
     }
   };
 
@@ -76,8 +79,11 @@ function TodoApp() {
     try {
       await todoAPI.toggleTodo(id);
       fetchTodos();
+      // Notification for toggle might be too noisy, consider if needed
+      // showNotification('操作成功', '任务状态已更新。', 'success');
     } catch (error) {
       console.error('切换 todo 状态失败:', error);
+      showNotification('操作失败', error.response?.data?.detail || '更新任务状态失败，请重试。', 'error');
     }
   };
 
@@ -86,28 +92,34 @@ function TodoApp() {
     try {
       await todoAPI.deleteTodo(id);
       fetchTodos();
+      showNotification('操作成功', '任务已删除。', 'success');
     } catch (error) {
       console.error('删除 todo 失败:', error);
+      showNotification('操作失败', error.response?.data?.detail || '删除任务失败，请重试。', 'error');
     }
   };
 
   // 清除已完成的 todos
   const handleClearCompleted = async () => {
     try {
-      await todoAPI.clearCompleted();
+      const response = await todoAPI.clearCompleted();
       fetchTodos();
+      showNotification('操作成功', response.data?.message || '已完成任务已清除。', 'success');
     } catch (error) {
       console.error('清除已完成 todos 失败:', error);
+      showNotification('操作失败', error.response?.data?.detail || '清除已完成任务失败，请重试。', 'error');
     }
   };
 
   // 标记所有为完成
   const handleMarkAllCompleted = async () => {
     try {
-      await todoAPI.markAllCompleted();
+      const response = await todoAPI.markAllCompleted();
       fetchTodos();
+      showNotification('操作成功', response.data?.message ||'所有任务已标记为完成。', 'success');
     } catch (error) {
       console.error('标记所有完成失败:', error);
+      showNotification('操作失败', error.response?.data?.detail || '标记所有任务为完成失败，请重试。', 'error');
     }
   };
 
@@ -115,15 +127,18 @@ function TodoApp() {
   // 在现有的 confirmDialog 状态管理函数后添加
   
   // 显示通知消息（替换 alert）
+  // This function sets the state for the ConfirmDialog to show a notification.
   const showNotification = (title, message, type = 'error') => {
     setConfirmDialog({
       isOpen: true,
       title: title,
       message: message,
-      type: type,
-      showCancelButton: false,  // 只显示确认按钮
-      onConfirm: () => setConfirmDialog({ isOpen: false }),
-      onCancel: () => setConfirmDialog({ isOpen: false })
+      type: type, // 'error', 'success', 'info', 'warning'
+      confirmText: '知道了', // Or 'OK'
+      showCancelButton: false,
+      onConfirm: () => setConfirmDialog({ isOpen: false, todoId: null, todoTitle: '' }), // Reset all relevant fields
+      onClose: () => setConfirmDialog({ isOpen: false, todoId: null, todoTitle: '' }),   // Reset all relevant fields
+      isNotification: true // Flag to differentiate from delete confirmation
     });
   };
   
@@ -132,48 +147,46 @@ function TodoApp() {
     try {
       await todoAPI.restoreTodo(id);
       fetchTodos();
+      showNotification('操作成功', '任务已成功还原。', 'success');
     } catch (error) {
       console.error('还原任务失败:', error);
-      // 替换原来的 alert('还原任务失败，请重试');
-      showNotification('操作失败', '还原任务失败，请重试', 'error');
+      showNotification('操作失败', error.response?.data?.error || '还原任务失败，请重试。', 'error');
     }
   };
   
-  // 修改 ConfirmDialog 组件的渲染，添加新的属性
-  <ConfirmDialog
-    isOpen={confirmDialog.isOpen}
-    title={confirmDialog.title}
-    message={confirmDialog.message}
-    type={confirmDialog.type || 'warning'}
-    showCancelButton={confirmDialog.showCancelButton !== false}  // 默认显示取消按钮
-    onConfirm={confirmDialog.onConfirm}
-    onClose={confirmDialog.onCancel || (() => setConfirmDialog({ isOpen: false }))}
-  />
+  // This ConfirmDialog instance will now handle both notifications and delete confirmations.
+  // The properties will be dynamically set by showNotification or showDeleteConfirm.
   
   // 添加显示删除确认弹框的函数
   const showDeleteConfirm = (todo) => {
     setConfirmDialog({
       isOpen: true,
-      todoId: todo.id,
-      todoTitle: todo.title
+      title: '确认删除任务',
+      message: `确定要删除任务 "${todo.title}" 吗？删除后管理员才能恢复。`,
+      type: 'warning',
+      confirmText: '删除',
+      cancelText: '取消',
+      showCancelButton: true,
+      onConfirm: () => {
+        if (todo.id) { // Ensure todo.id is available
+          handleDeleteTodo(todo.id);
+        }
+        setConfirmDialog({ isOpen: false, todoId: null, todoTitle: '' }); // Close and reset
+      },
+      onClose: () => setConfirmDialog({ isOpen: false, todoId: null, todoTitle: '' }), // Close and reset
+      todoId: todo.id, // Keep for potential direct use if needed, though onConfirm now handles it
+      todoTitle: todo.title, // Keep for potential direct use
+      isNotification: false
     });
   };
 
-  // 添加关闭确认弹框的函数
-  const closeDeleteConfirm = () => {
-    setConfirmDialog({
-      isOpen: false,
-      todoId: null,
-      todoTitle: ''
-    });
-  };
+  // closeDeleteConfirm is now handled by onClose in setConfirmDialog for delete, or by onConfirm/onClose for notifications
+  // confirmDelete is now handled by onConfirm in setConfirmDialog for delete
 
-  // 添加确认删除的函数
-  const confirmDelete = () => {
-    if (confirmDialog.todoId) {
-      handleDeleteTodo(confirmDialog.todoId);
-    }
-  };
+  // No longer explicitly needed as separate functions if ConfirmDialog state is managed well.
+  // const closeDeleteConfirm = () => { ... };
+  // const confirmDelete = () => { ... };
+
 
   const completedCount = todos.filter(todo => todo.completed).length;
   const activeCount = todos.length - completedCount;
@@ -361,12 +374,14 @@ function TodoApp() {
         {/* 添加确认弹框 */}
         <ConfirmDialog
           isOpen={confirmDialog.isOpen}
-          onClose={closeDeleteConfirm}
-          onConfirm={confirmDelete}
-          title="确认删除任务"
-          message={`确定要删除任务"${confirmDialog.todoTitle}"吗？删除后管理员才能恢复。`}
-          confirmText="删除"
-          cancelText="取消"
+          onClose={confirmDialog.onClose || (() => setConfirmDialog({ isOpen: false }))} // Default onClose if not provided
+          onConfirm={confirmDialog.onConfirm}
+          title={confirmDialog.title || "提示"}
+          message={confirmDialog.message || ""}
+          type={confirmDialog.type || 'info'}
+          confirmText={confirmDialog.confirmText || "确定"}
+          cancelText={confirmDialog.cancelText || "取消"}
+          showCancelButton={confirmDialog.showCancelButton !== false} // Default to true if not specified
         />
       </div>
     </div>
