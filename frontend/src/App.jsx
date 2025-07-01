@@ -24,9 +24,9 @@ function TopNavbar() {
     <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
       {/* 左侧标题和欢迎信息 */}
       <div className="flex items-center space-x-4">
-        <h1 className="text-xl font-semibold text-gray-800">PASS-星舰</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">PASS-星舰</h1>
         {user && (
-          <span className="text-sm text-gray-600">欢迎, {user.nickname}</span>
+          <span className="text-base text-gray-600">欢迎, {user.nickname}</span>
         )}
       </div>
       
@@ -60,13 +60,13 @@ function Sidebar() {
             <li key={item.path}>
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                   isActive(item.path)
                     ? 'bg-blue-100 text-blue-700 border border-blue-200'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <span className="mr-3 text-lg">{item.icon}</span>
+                <span className="mr-3 text-xl">{item.icon}</span>
                 {item.label}
               </Link>
             </li>
@@ -202,8 +202,8 @@ function AppLayout() {
       {/* 顶部导航栏（仅登录用户可见） */}
       {user && !noSidebarPages.includes(location.pathname) && <TopNavbar />}
       
-      {/* 主体内容区域 */}
-      <div className="flex flex-1">
+      {/* 主体内容区域 - 添加高度限制和溢出控制 */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {showSidebar && <Sidebar />}
         <MainContent />
       </div>
