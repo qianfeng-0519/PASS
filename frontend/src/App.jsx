@@ -1,40 +1,58 @@
-import React from 'react'; // useContext no longer directly used here
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './components/AuthContext'; // Import useAuth
+import { AuthProvider, useAuth } from './components/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import UserProfile from './components/UserProfile';
 import TodoApp from './components/TodoApp';
+import Bridge from './components/Bridge';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/AdminDashboard';
+import UserAvatar from './components/UserAvatar';
+// 导入四个中心页面组件
+import InformationCenter from './components/InformationCenter';
+import StrategicCenter from './components/StrategicCenter';
+import CommandCenter from './components/CommandCenter';
+import MaintenanceCenter from './components/MaintenanceCenter';
 import './App.css';
 
-// 侧边栏导航组件
+// 顶部导航栏组件
+function TopNavbar() {
+  const { user } = useAuth();
+  
+  return (
+    <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+      {/* 左侧标题和欢迎信息 */}
+      <div className="flex items-center space-x-4">
+        <h1 className="text-xl font-semibold text-gray-800">PASS-星舰</h1>
+        {user && (
+          <span className="text-sm text-gray-600">欢迎, {user.nickname}</span>
+        )}
+      </div>
+      
+      {/* 右侧用户头像 */}
+      <UserAvatar />
+    </div>
+  );
+}
+
+// 侧边栏导航组件（修正为平级结构）
 function Sidebar() {
-  const { user, logout } = useAuth(); // Use the useAuth hook
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
 
   const menuItems = [
+    { path: '/bridge', label: '舰桥', icon: '🚀' },
+    { path: '/information', label: '信息中心', icon: '📊' },
+    { path: '/strategic', label: '战略中心', icon: '🎯' },
+    { path: '/command', label: '指挥中心', icon: '⚡' },
+    { path: '/maintenance', label: '维护中心', icon: '🔧' },
     { path: '/', label: 'Todo列表', icon: '📝' },
-    { path: '/profile', label: '个人资料', icon: '👤' },
   ];
 
-  if (user?.is_staff) {
-    menuItems.push({ path: '/admin', label: '管理面板', icon: '⚙️' });
-  }
-
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col">
-      {/* 应用标题 */}
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">PASS-星舰</h1>
-        {user && (
-          <p className="text-sm text-gray-600 mt-1">欢迎, {user.username}</p>
-        )}
-      </div>
-
+    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
       {/* 导航菜单 */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -55,22 +73,11 @@ function Sidebar() {
           ))}
         </ul>
       </nav>
-
-      {/* 用户操作区 */}
-      <div className="p-4 border-t border-gray-200">
-        <button
-          onClick={logout}
-          className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors"
-        >
-          <span className="mr-3 text-lg">🚪</span>
-          退出登录
-        </button>
-      </div>
     </div>
   );
 }
 
-// 主内容区组件
+// 主内容区组件（添加四个中心页面路由）
 function MainContent() {
   return (
     <div className="flex-1 bg-white overflow-auto">
@@ -87,6 +94,51 @@ function MainContent() {
           />
           
           {/* 受保护的路由 */}
+          <Route 
+            path="/bridge" 
+            element={
+              <ProtectedRoute>
+                <div className="h-full">
+                  <Bridge />
+                </div>
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* 四个中心页面路由 */}
+          <Route 
+            path="/information" 
+            element={
+              <ProtectedRoute>
+                <InformationCenter />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/strategic" 
+            element={
+              <ProtectedRoute>
+                <StrategicCenter />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/command" 
+            element={
+              <ProtectedRoute>
+                <CommandCenter />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/maintenance" 
+            element={
+              <ProtectedRoute>
+                <MaintenanceCenter />
+              </ProtectedRoute>
+            } 
+          />
+          
           <Route 
             path="/" 
             element={
@@ -130,7 +182,7 @@ function MainContent() {
 
 // 主应用布局组件
 function AppLayout() {
-  const { user, loading } = useAuth(); // Use the useAuth hook
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   // 不需要侧边栏的页面
@@ -146,9 +198,15 @@ function AppLayout() {
   }
 
   return (
-    <div className="h-screen flex bg-gray-50">
-      {showSidebar && <Sidebar />}
-      <MainContent />
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* 顶部导航栏（仅登录用户可见） */}
+      {user && !noSidebarPages.includes(location.pathname) && <TopNavbar />}
+      
+      {/* 主体内容区域 */}
+      <div className="flex flex-1">
+        {showSidebar && <Sidebar />}
+        <MainContent />
+      </div>
     </div>
   );
 }

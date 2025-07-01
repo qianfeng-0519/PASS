@@ -39,6 +39,7 @@ class TodoViewSet(viewsets.ModelViewSet):
         completed = self.request.query_params.get('completed', None)
         search = self.request.query_params.get('search', None)
         show_deleted = self.request.query_params.get('show_deleted', None)
+        todo_type = self.request.query_params.get('todo_type', None)  # 新增todo_type过滤
         
         if completed is not None:
             completed_bool = completed.lower() in ['true', '1', 'yes']
@@ -48,6 +49,10 @@ class TodoViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(title__icontains=search) | Q(description__icontains=search)
             )
+        
+        # 新增：根据todo_type过滤
+        if todo_type:
+            queryset = queryset.filter(todo_type=todo_type)
         
         # 管理员可以查看已删除的任务
         if show_deleted and user.is_staff:
