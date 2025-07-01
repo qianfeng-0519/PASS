@@ -6,7 +6,10 @@ const UserProfile = () => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     nickname: '',
-    email: ''
+    email: '',
+    current_password: '',
+    new_password: '',
+    confirm_new_password: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +25,10 @@ const UserProfile = () => {
       setUser(response.data);
       setFormData({
         nickname: response.data.nickname || '',
-        email: response.data.email
+        email: response.data.email,
+        current_password: '',
+        new_password: '',
+        confirm_new_password: ''
       });
     } catch (err) {
       setError('加载用户信息失败');
@@ -42,11 +48,46 @@ const UserProfile = () => {
     setError('');
     setSuccess('');
 
+    // Frontend validation for password fields
+    const { current_password, new_password, confirm_new_password } = formData;
+    const passwordFieldsFilled = current_password || new_password || confirm_new_password;
+
+    if (passwordFieldsFilled) {
+      if (!current_password || !new_password || !confirm_new_password) {
+        setError('如需修改密码，请填写所有密码字段：当前密码、新密码和确认新密码。');
+        setLoading(false);
+        return;
+      }
+      if (new_password !== confirm_new_password) {
+        setError('新密码和确认新密码不匹配。');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      const response = await authAPI.updateProfile(formData);
+      // Prepare payload: only send password fields if they are intended to be changed
+      const payload = {
+        nickname: formData.nickname,
+        email: formData.email,
+      };
+      if (passwordFieldsFilled) {
+        payload.current_password = current_password;
+        payload.new_password = new_password;
+        payload.confirm_new_password = confirm_new_password;
+      }
+
+      const response = await authAPI.updateProfile(payload);
       setUser(response.data);
       setEditing(false);
       setSuccess('个人信息更新成功');
+      // Clear password fields from form data after successful submission
+      setFormData(prevData => ({
+        ...prevData,
+        current_password: '',
+        new_password: '',
+        confirm_new_password: ''
+      }));
     } catch (err) {
       // 改进错误处理，显示具体错误信息
       if (err.response?.data) {
@@ -142,6 +183,46 @@ const UserProfile = () => {
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
+            />
+          </div>
+
+          <hr className="my-6" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">修改密码</h3>
+          <p className="text-sm text-gray-500 mb-4">如不修改密码，请将以下三个输入框留空。</p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">当前密码</label>
+            <input
+              type="password"
+              name="current_password"
+              value={formData.current_password}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="输入当前密码"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">新密码</label>
+            <input
+              type="password"
+              name="new_password"
+              value={formData.new_password}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="输入新密码"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">确认新密码</label>
+            <input
+              type="password"
+              name="confirm_new_password"
+              value={formData.confirm_new_password}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="再次输入新密码"
             />
           </div>
           

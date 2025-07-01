@@ -61,16 +61,74 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'username', 'is_staff', 'created_at', 'updated_at')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    """用户信息更新序列化器"""
+    """用户信息更新序列化器 (包含可选的密码修改)"""
+    current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    confirm_new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
     class Meta:
         model = User
-        fields = ('nickname', 'email')
+        fields = ('nickname', 'email', 'current_password', 'new_password', 'confirm_new_password')
     
     def validate_email(self, value):
         user = self.instance
-        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+        if value and User.objects.filter(email=value).exclude(pk=user.pk).exists():
             raise serializers.ValidationError("邮箱已被其他用户使用")
         return value
+
+    def validate(self, attrs):
+        current_password = attrs.get('current_password')
+        new_password = attrs.get('new_password')
+        confirm_new_password = attrs.get('confirm_new_password')
+
+        # Check if any password field is filled
+        password_change_attempted = bool(current_password or new_password or confirm_new_password)
+
+        if password_change_attempted:
+            # If attempting to change password, all password fields are required
+            if not current_password:
+                raise serializers.ValidationError({"current_password": "当前密码为必填项。"})
+            if not new_password:
+                raise serializers.ValidationError({"new_password": "新密码为必填项。"})
+            if not confirm_new_password:
+                raise serializers.ValidationError({"confirm_new_password": "确认新密码为必填项。"})
+
+            # Validate current password
+            if not self.instance.check_password(current_password):
+                raise serializers.ValidationError({"current_password": "当前密码不正确。"})
+
+            # Validate new password confirmation
+            if new_password != confirm_new_password:
+                raise serializers.ValidationError({"confirm_new_password": "两次输入的新密码不一致。"})
+
+            # Validate new password strength (using Django's built-in validators)
+            try:
+                validate_password(new_password, self.instance)
+            except serializers.ValidationError as e: # Django's validate_password raises core ValidationError
+                # Convert to DRF's ValidationError for consistent error reporting
+                raise serializers.ValidationError({"new_password": list(e.messages)})
+
+        # Remove password fields if they were not part of a valid change attempt or were blank
+        # This ensures they don't accidentally get passed to `update` if not intended for change.
+        if not (password_change_attempted and new_password): # new_password check is crucial here
+            attrs.pop('current_password', None)
+            attrs.pop('new_password', None)
+            attrs.pop('confirm_new_password', None)
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        # 更新昵称和邮箱
+        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.email = validated_data.get('email', instance.email)
+
+        # 如果提供了新密码且通过了验证，则更新密码
+        new_password = validated_data.get('new_password')
+        if new_password:
+            instance.set_password(new_password)
+
+        instance.save()
+        return instance
 
 class PasswordChangeSerializer(serializers.Serializer):
     """密码修改序列化器"""
