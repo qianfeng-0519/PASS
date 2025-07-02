@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, MessageSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import ChatBox from './ChatBox';
 
 function Bridge() {
   const { user } = useAuth();
@@ -10,6 +11,7 @@ function Bridge() {
   const [newTodoType, setNewTodoType] = useState('record');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isChatExpanded, setIsChatExpanded] = useState(false); // ChatBox展开状态
   
   // 定义类型选项
   const todoTypes = [
@@ -58,89 +60,133 @@ function Bridge() {
   }, [successMessage]);
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        
-        {/* 页面标题 */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">🚀 舰桥</h1>
-          <p className="text-gray-600">快速录入系统</p>
-        </motion.div>
-
-        {/* 主卡片 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="macos-card p-6"
-        >
-          {/* 录入表单 */}
-          <form onSubmit={handleAddTodo} className="mb-4">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={newTodo}
-                onChange={(e) => setNewTodo(e.target.value)}
-                placeholder="添加新任务..."
-                className="macos-input flex-1"
-                disabled={loading}
-                autoFocus
-              />
-              {/* 类型选择下拉框 */}
-              <select
-                value={newTodoType}
-                onChange={(e) => setNewTodoType(e.target.value)}
-                className="macos-input w-24 text-sm"
-                disabled={loading}
-              >
-                {todoTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={loading || !newTodo.trim()}
-                className={`macos-button-primary flex items-center gap-2 ${
-                  loading || !newTodo.trim() 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : ''
-                }`}
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Plus size={18} />
-                )}
-                {loading ? '录入中...' : '添加'}
-              </button>
-            </div>
-          </form>
-
-          {/* 成功消息 */}
-          <AnimatePresence>
-            {successMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* 添加任务区域 */}
+      <AnimatePresence>
+        {!isChatExpanded && (
+          <motion.div
+            initial={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="py-8 px-4 flex-shrink-0"
+          >
+            <div className="max-w-2xl mx-auto">
+              {/* 页面标题 */}
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className={`p-3 rounded-macos text-sm ${
-                  successMessage.includes('失败') 
-                    ? 'bg-red-50 text-red-700 border border-red-200'
-                    : 'bg-green-50 text-green-700 border border-green-200'
-                }`}
+                className="text-center mb-8"
               >
-                {successMessage}
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">🚀 舰桥</h1>
+                <p className="text-gray-600">快速录入系统</p>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+
+              {/* 主卡片 */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="macos-card p-6"
+              >
+                {/* 录入表单 */}
+                <form onSubmit={handleAddTodo} className="mb-4">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={newTodo}
+                      onChange={(e) => setNewTodo(e.target.value)}
+                      placeholder="添加新任务..."
+                      className="macos-input flex-1"
+                      disabled={loading}
+                      autoFocus
+                    />
+                    {/* 类型选择下拉框 */}
+                    <select
+                      value={newTodoType}
+                      onChange={(e) => setNewTodoType(e.target.value)}
+                      className="macos-input w-24 text-sm"
+                      disabled={loading}
+                    >
+                      {todoTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={loading || !newTodo.trim()}
+                      className={`macos-button-primary flex items-center gap-2 ${
+                        loading || !newTodo.trim() 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : ''
+                      }`}
+                    >
+                      {loading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Plus size={18} />
+                      )}
+                      {loading ? '录入中...' : '添加'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* 成功消息 */}
+                <AnimatePresence>
+                  {successMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className={`p-3 rounded-macos text-sm ${
+                        successMessage.includes('失败') 
+                          ? 'bg-red-50 text-red-700 border border-red-200'
+                          : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}
+                    >
+                      {successMessage}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ChatBox 切换按钮 */}
+      <div className="flex-shrink-0 px-4 pb-2">
+        <div className="max-w-6xl mx-auto">
+          <button
+            onClick={() => setIsChatExpanded(!isChatExpanded)}
+            className="w-full flex items-center justify-center gap-2 p-3 bg-white border border-gray-200 rounded-macos hover:bg-gray-50 transition-colors"
+          >
+            <MessageSquare size={20} className="text-macos-blue" />
+            <span className="font-medium text-gray-700">
+              {isChatExpanded ? '收起AI对话' : '展开AI对话'}
+            </span>
+            {isChatExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          </button>
+        </div>
       </div>
+
+      {/* AI 对话区域 */}
+      <AnimatePresence>
+        {isChatExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 px-4 pb-4 min-h-0"
+          >
+            <div className="max-w-6xl mx-auto h-full">
+              <ChatBox />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

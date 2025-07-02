@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # Local apps
     'backend.apps.todos',
     'backend.apps.users',
+    'backend.apps.chat',  # 新增chat应用
 ]
 
 MIDDLEWARE = [

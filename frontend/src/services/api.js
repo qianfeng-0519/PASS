@@ -237,5 +237,45 @@ export const authUtils = {
   }
 };
 
+// Chat API
+export const chatAPI = {
+  // 获取对话列表
+  getConversations: (params = {}) => api.get('/chat/', { params }),
+  
+  // 创建新对话
+  createConversation: () => api.post('/chat/create_conversation/'),
+  
+  // 获取对话详情
+  getConversation: (id) => api.get(`/chat/${id}/`),
+  
+  // 获取对话消息
+  getMessages: (conversationId) => api.get(`/chat/${conversationId}/messages/`),
+  
+  // 发送消息（流式响应）
+  sendMessage: async (conversationId, message) => {
+    const token = tokenManager.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/send_message/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response;
+  },
+  
+  // 删除对话
+  deleteConversation: (id) => api.delete(`/chat/${id}/`),
+  
+  // 更新对话标题
+  updateConversation: (id, data) => api.put(`/chat/${id}/`, data),
+};
+
 export { tokenManager };
 export default api;

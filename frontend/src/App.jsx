@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './components/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import UserProfile from './components/UserProfile';
-import TodoApp from './components/TodoApp';
 import Bridge from './components/Bridge';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/AdminDashboard';
@@ -36,7 +35,7 @@ function TopNavbar() {
   );
 }
 
-// 侧边栏导航组件（修正为平级结构）
+// 侧边栏导航组件（移除Todo列表）
 function Sidebar() {
   const location = useLocation();
 
@@ -48,7 +47,6 @@ function Sidebar() {
     { path: '/strategic', label: '战略中心', icon: '🎯' },
     { path: '/command', label: '指挥中心', icon: '⚡' },
     { path: '/maintenance', label: '维护中心', icon: '🔧' },
-    { path: '/', label: 'Todo列表', icon: '📝' },
   ];
 
   return (
@@ -77,7 +75,7 @@ function Sidebar() {
   );
 }
 
-// 主内容区组件（添加四个中心页面路由）
+// 主内容区组件（移除Todo路由）
 function MainContent() {
   return (
     <div className="flex-1 bg-white overflow-auto">
@@ -140,16 +138,6 @@ function MainContent() {
           />
           
           <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <div className="h-full p-8">
-                  <TodoApp />
-                </div>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
             path="/profile" 
             element={
               <ProtectedRoute>
@@ -172,8 +160,9 @@ function MainContent() {
             } 
           />
           
-          {/* 默认重定向 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* 默认重定向到舰桥 */}
+          <Route path="/" element={<Navigate to="/bridge" replace />} />
+          <Route path="*" element={<Navigate to="/bridge" replace />} />
         </Routes>
       </div>
     </div>
