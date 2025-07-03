@@ -5,13 +5,15 @@ class TodoSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     created_by_nickname = serializers.CharField(source='created_by.nickname', read_only=True)
     status_display = serializers.CharField(read_only=True)
-    type_display = serializers.CharField(read_only=True)  # 新增
+    type_display = serializers.CharField(read_only=True)
+    priority_display = serializers.CharField(read_only=True)  # 新增优先级显示
     
     class Meta:
         model = Todo
         fields = [
             'id', 'title', 'description', 'completed', 'is_deleted',
-            'todo_type', 'type_display',  # 新增类型字段
+            'todo_type', 'type_display',
+            'priority', 'priority_display',  # 新增优先级字段
             'created_by', 'created_by_username', 'created_by_nickname',
             'status_display', 'created_at', 'updated_at'
         ]

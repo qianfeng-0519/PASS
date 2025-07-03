@@ -5,7 +5,8 @@ import ConfirmDialog from './ConfirmDialog';
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState(null);
+  // 移除 stats 相关状态
+  // const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -59,15 +60,15 @@ function AdminDashboard() {
   };
 
   // 获取用户统计
-  const fetchStats = async () => {
-    try {
-      const response = await authAPI.getUserStats();
-      setStats(response.data);
-    } catch (error) {
-      console.error('获取统计数据失败:', error);
-      showNotification('加载失败', '获取用户统计数据失败，请稍后重试。', 'error');
-    }
-  };
+  // const fetchStats = async () => {
+  //   try {
+  //     const response = await authAPI.getUserStats();
+  //     setStats(response.data);
+  //   } catch (error) {
+  //     console.error('获取统计数据失败:', error);
+  //     showNotification('加载失败', '获取用户统计数据失败，请稍后重试。', 'error');
+  //   }
+  // };
 
   // 获取用户列表
   const fetchUsers = async (page = 1) => {
@@ -203,7 +204,8 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
+    // 移除 fetchStats() 调用
+    // fetchStats();
     fetchUsers();
   }, []);
 
@@ -233,11 +235,11 @@ function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">管理员仪表板</h1>
-        <p className="text-gray-600">管理用户账户和查看系统统计</p>
+        <p className="text-gray-600">管理用户账户</p>
       </div>
 
-      {/* 统计卡片 */}
-      {stats && (
+      {/* 移除整个统计卡片部分 */}
+      {/* {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
@@ -279,7 +281,7 @@ function AdminDashboard() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 用户管理 */}
       <div className="bg-white rounded-lg shadow">

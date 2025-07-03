@@ -154,79 +154,73 @@ const UserProfile = () => {
       )}
 
       {editing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">用户名</label>
-            <p className="mt-1 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
-              {user.username} (不可修改)
-            </p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">昵称</label>
+        <form onSubmit={handleSubmit} className="space-y-3">
+
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700 w-16 flex-shrink-0">昵称</label>
             <input
               type="text"
               name="nickname"
               value={formData.nickname}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="请输入昵称"
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">邮箱</label>
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700 w-16 flex-shrink-0">邮箱</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
           </div>
 
-          <hr className="my-6" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">修改密码</h3>
-          <p className="text-sm text-gray-500 mb-4">如不修改密码，请将以下三个输入框留空。</p>
+          <hr className="my-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-1">修改密码</h3>
+          <p className="text-sm text-gray-500 mb-3">如不修改密码，请将以下三个输入框留空。</p>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">当前密码</label>
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">当前密码</label>
             <input
               type="password"
               name="current_password"
               value={formData.current_password}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="输入当前密码"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">新密码</label>
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">新密码</label>
             <input
               type="password"
               name="new_password"
               value={formData.new_password}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="输入新密码"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">确认新密码</label>
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">确认新密码</label>
             <input
               type="password"
               name="confirm_new_password"
               value={formData.confirm_new_password}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="再次输入新密码"
             />
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 pt-2">
             <button
               type="submit"
               disabled={loading}

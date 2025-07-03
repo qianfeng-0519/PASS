@@ -14,6 +14,22 @@ class Todo(models.Model):
         ('issue', '故障'),
     ]
     
+    # 添加优先级选择
+    PRIORITY_CHOICES = [
+        ('high', '高'),
+        ('medium', '中'), 
+        ('low', '低'),
+        ('none', '无'),
+    ]
+    
+    # 优先级排序权重（数值越小优先级越高）
+    PRIORITY_WEIGHTS = {
+        'high': 1,
+        'medium': 2,
+        'low': 3,
+        'none': 4,
+    }
+    
     title = models.CharField(max_length=200, help_text="任务标题")
     description = models.TextField(blank=True, help_text="任务描述")
     completed = models.BooleanField(default=False, help_text="是否完成")
@@ -25,6 +41,15 @@ class Todo(models.Model):
         default='record',
         verbose_name="类型",
         help_text="todo类型"
+    )
+    
+    # 新增优先级字段
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default='none',
+        verbose_name="优先级",
+        help_text="任务优先级"
     )
     
     # 新增字段
@@ -49,7 +74,8 @@ class Todo(models.Model):
     updated_at = models.DateTimeField(auto_now=True, help_text="更新时间")
     
     class Meta:
-        ordering = ['-created_at']
+        # 按优先级排序，高优先级靠前，然后按创建时间倒序
+        ordering = ['priority', '-created_at']
         verbose_name = "待办事项"
         verbose_name_plural = "待办事项"
         indexes = [
@@ -57,6 +83,7 @@ class Todo(models.Model):
             models.Index(fields=['is_deleted']),
             models.Index(fields=['todo_type']),
             models.Index(fields=['parent_todo_id']),  # 父todo ID索引
+            models.Index(fields=['priority']),  # 优先级索引
         ]
     
     def __str__(self):
@@ -69,6 +96,15 @@ class Todo(models.Model):
     @property
     def type_display(self):
         return dict(self.TYPE_CHOICES).get(self.todo_type, self.todo_type)
+    
+    @property
+    def priority_display(self):
+        return dict(self.PRIORITY_CHOICES).get(self.priority, self.priority)
+    
+    @property
+    def priority_weight(self):
+        """获取优先级权重，用于排序"""
+        return self.PRIORITY_WEIGHTS.get(self.priority, 999)
     
     def soft_delete(self):
         """软删除"""
@@ -95,7 +131,7 @@ class Todo(models.Model):
         return Todo.objects.filter(
             parent_todo_id=self.id,
             is_deleted=False
-        ).order_by('-created_at')
+        ).order_by('priority', '-created_at')  # 子任务也按优先级排序
     
     @property
     def has_sub_todos(self):

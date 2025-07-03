@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 from .models import Todo
 from .serializers import TodoSerializer
 from backend.apps.users.views import IsAdminUser # Import IsAdminUser
@@ -61,7 +61,17 @@ class TodoViewSet(viewsets.ModelViewSet):
             elif show_deleted.lower() in ['false', '0', 'no']:
                 queryset = queryset.filter(is_deleted=False)
         
-        return queryset.order_by('-created_at')
+        # 按优先级排序（高优先级靠前），然后按创建时间倒序
+        return queryset.annotate(
+            priority_order=Case(
+                When(priority='high', then=1),
+                When(priority='medium', then=2),
+                When(priority='low', then=3),
+                When(priority='none', then=4),
+                default=4,
+                output_field=IntegerField()
+            )
+        ).order_by('priority_order', '-created_at')
     
     def perform_create(self, serializer):
         """创建任务时自动设置创建者"""

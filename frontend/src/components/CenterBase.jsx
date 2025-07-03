@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, RefreshCw, Check, Trash2, RotateCcw, Edit3, Save, X, Plus, Calendar, User } from 'lucide-react';
 import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import PriorityTag from './PriorityTag';
 
 const CenterBase = ({ 
   title, 
@@ -16,14 +17,14 @@ const CenterBase = ({
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all'); // all, active, completed
+  const [filter, setFilter] = useState('active'); // 从 'all' 改为 'active'
   
   // 新增状态：选中的todo和详情卡片相关状态
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', description: '' });
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'none' });
   const [showNewSubTodoModal, setShowNewSubTodoModal] = useState(false); // 弹出框状态
-  const [newSubTodoForm, setNewSubTodoForm] = useState({ title: '', description: '', todo_type: 'record' });
+  const [newSubTodoForm, setNewSubTodoForm] = useState({ title: '', description: '', todo_type: 'record', priority: 'none' });
 
   // 定义类型选项
   const todoTypes = [
@@ -31,6 +32,14 @@ const CenterBase = ({
     { value: 'requirement', label: '需求', color: 'bg-green-100 text-green-800' },
     { value: 'task', label: '任务', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'issue', label: '故障', color: 'bg-red-100 text-red-800' }
+  ];
+
+  // 优先级选项
+  const priorityOptions = [
+    { value: 'high', label: '高' },
+    { value: 'medium', label: '中' },
+    { value: 'low', label: '低' },
+    { value: 'none', label: '无' }
   ];
 
   // 颜色主题配置
@@ -151,12 +160,16 @@ const CenterBase = ({
     // 只有未完成且未删除的todo可以选择
     if (!todo.completed && !todo.is_deleted) {
       setSelectedTodo(todo);
-      setEditForm({ title: todo.title, description: todo.description || '' });
+      setEditForm({ 
+        title: todo.title, 
+        description: todo.description || '',
+        priority: todo.priority || 'none'
+      });
       setIsEditing(false);
     }
   };
 
-  // 开始编辑
+    // 开始编辑
   const handleStartEdit = () => {
     setIsEditing(true);
   };
@@ -164,15 +177,20 @@ const CenterBase = ({
   // 取消编辑
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditForm({ title: selectedTodo.title, description: selectedTodo.description || '' });
+    setEditForm({ 
+      title: selectedTodo.title, 
+      description: selectedTodo.description || '',
+      priority: selectedTodo.priority || 'none'
+    });
   };
-
+  
   // 保存编辑
   const handleSaveEdit = async () => {
     try {
       const updateData = {
         title: editForm.title,
-        description: editForm.description
+        description: editForm.description,
+        priority: editForm.priority
       };
       
       await todoAPI.updateTodo(selectedTodo.id, updateData);
@@ -200,7 +218,7 @@ const CenterBase = ({
       await todoAPI.createTodo(subTodoData);
       
       // 重置表单并关闭弹出框
-      setNewSubTodoForm({ title: '', description: '', todo_type: 'record' });
+      setNewSubTodoForm({ title: '', description: '', todo_type: 'record', priority: 'none' });
       setShowNewSubTodoModal(false);
       
       // 刷新列表
@@ -213,7 +231,7 @@ const CenterBase = ({
   // 取消创建子todo
   const handleCancelCreateSubTodo = () => {
     setShowNewSubTodoModal(false);
-    setNewSubTodoForm({ title: '', description: '', todo_type: 'record' });
+    setNewSubTodoForm({ title: '', description: '', todo_type: 'record', priority: 'none' });
   };
 
   // 格式化日期
@@ -229,7 +247,7 @@ const CenterBase = ({
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <div className="max-w-7xl mx-auto flex flex-col h-full p-4">
+      <div className="max-w-7xl mx-auto flex flex-col h-full p-4 min-w-full ">
         {/* 页面头部 - 固定高度 */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -249,7 +267,7 @@ const CenterBase = ({
 
         {/* 主要内容区域 - 左右分栏 */}
         <div className="flex gap-4 flex-1 min-h-0">
-          {/* 左侧：Todo列表 - 50%宽度 */}
+          {/* 左侧：Todo列表 - 固定50%宽度 */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -342,17 +360,22 @@ const CenterBase = ({
                           >
                             {todo.completed && <Check size={10} className="text-white" />}
                           </button>
-                          <span
-                            className={`flex-1 transition-all ${
-                              todo.is_deleted
-                                ? 'text-red-500' + (todo.completed ? ' line-through' : '')
-                                : todo.completed
-                                ? 'text-macos-gray-500 line-through'
-                                : 'text-macos-gray-800'
-                            }`}
-                          >
-                            {todo.title}
-                          </span>
+                          
+                          <div className="flex-1 flex items-center gap-2">
+                            <span
+                              className={`flex-1 transition-all ${
+                                todo.is_deleted
+                                  ? 'text-red-500' + (todo.completed ? ' line-through' : '')
+                                  : todo.completed
+                                  ? 'text-macos-gray-500 line-through'
+                                  : 'text-macos-gray-800'
+                              }`}
+                            >
+                              {todo.title}
+                            </span>
+                            <PriorityTag priority={todo.priority || 'none'} size="xs" />
+                          </div>
+                          
                           {todo.is_deleted ? (
                             <button
                               onClick={(e) => {
@@ -385,7 +408,7 @@ const CenterBase = ({
             </div>
           </motion.div>
 
-          {/* 右侧：详情卡片 - 50%宽度 */}
+          {/* 右侧：详情卡片 - 固定50%宽度 */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -471,22 +494,47 @@ const CenterBase = ({
                       )}
                     </div>
 
-                    {/* 基本信息 */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* 优先级 - 仅在编辑模式下显示 */}
+                    {isEditing && (
                       <div>
-                        <div className="flex items-center gap-2 text-macos-gray-600 bg-macos-gray-50 p-2 rounded-macos">
-                          <Calendar size={14} />
-                          <span className="text-sm">{formatDate(selectedTodo.created_at)}</span>
-                        </div>
+                        <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">优先级：</label>
+                        <select
+                          value={editForm.priority}
+                          onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
+                          className="macos-input w-full"
+                        >
+                          {priorityOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div>
-                        <div className={`flex items-center gap-2 p-2 rounded-macos ${
-                          selectedTodo.completed ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
-                        }`}>
-                          <div className={`w-2 h-2 rounded-full ${
-                            selectedTodo.completed ? 'bg-green-500' : 'bg-yellow-500'
-                          }`}></div>
-                          <span className="text-sm">{selectedTodo.completed ? '已完成' : '进行中'}</span>
+                    )}
+
+                    {/* 基本信息 */}
+                    <div>
+                      <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">基本信息：</label>
+                      <div className="bg-macos-gray-50 p-3 rounded-macos">
+                        <div className="flex items-center justify-between gap-4">
+                          {/* 创建时间 */}
+                          <div className="flex items-center gap-2 text-macos-gray-600">
+                            <Calendar size={14} />
+                            <span className="text-sm">{formatDate(selectedTodo.created_at)}</span>
+                          </div>
+                          
+                          {/* 完成状态 */}
+                          <div className={`flex items-center gap-2 px-2 py-1 rounded-md ${
+                            selectedTodo.completed ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                          }`}>
+                            <div className={`w-2 h-2 rounded-full ${
+                              selectedTodo.completed ? 'bg-green-500' : 'bg-yellow-500'
+                            }`}></div>
+                            <span className="text-sm">{selectedTodo.completed ? '已完成' : '进行中'}</span>
+                          </div>
+                          
+                          {/* 优先级 */}
+                          <div>
+                            <PriorityTag priority={selectedTodo.priority || 'none'} size="sm" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -567,6 +615,19 @@ const CenterBase = ({
                     >
                       {todoTypes.map(type => (
                         <option key={type.value} value={type.value}>{type.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-macos-gray-700 mb-1">优先级</label>
+                    <select
+                      value={newSubTodoForm.priority}
+                      onChange={(e) => setNewSubTodoForm({ ...newSubTodoForm, priority: e.target.value })}
+                      className="macos-input w-full"
+                    >
+                      {priorityOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>
                   </div>
