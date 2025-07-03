@@ -3,6 +3,9 @@ from django.utils import timezone
 from django.conf import settings
 
 class Todo(models.Model):
+    # Django会自动创建id字段作为主键
+    # id = models.AutoField(primary_key=True)  # 这行是隐式的，不需要写出来
+    
     # 添加类型选择
     TYPE_CHOICES = [
         ('record', '记录'),
@@ -28,11 +31,19 @@ class Todo(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        # default=1, # Removed default, created_by should always be set by the application logic
         related_name='todos',
         verbose_name="创建人",
         help_text="任务创建者"
     )
+    
+    # 父todo ID字段 - 存储父todo的ID
+    parent_todo_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="父任务ID",
+        help_text="父级任务的ID，用于建立任务层级关系"
+    )
+    
     is_deleted = models.BooleanField(default=False, verbose_name="删除标记", help_text="软删除标记")
     created_at = models.DateTimeField(auto_now_add=True, help_text="创建时间")
     updated_at = models.DateTimeField(auto_now=True, help_text="更新时间")
@@ -44,7 +55,8 @@ class Todo(models.Model):
         indexes = [
             models.Index(fields=['created_by']),
             models.Index(fields=['is_deleted']),
-            models.Index(fields=['todo_type']),  # 新增索引
+            models.Index(fields=['todo_type']),
+            models.Index(fields=['parent_todo_id']),  # 父todo ID索引
         ]
     
     def __str__(self):
@@ -67,3 +79,28 @@ class Todo(models.Model):
         """恢复删除"""
         self.is_deleted = False
         self.save(update_fields=['is_deleted', 'updated_at'])
+    
+    @property
+    def parent_todo(self):
+        """获取父任务对象"""
+        if self.parent_todo_id:
+            try:
+                return Todo.objects.get(id=self.parent_todo_id, is_deleted=False)
+            except Todo.DoesNotExist:
+                return None
+        return None
+    
+    def get_sub_todos(self):
+        """获取子任务列表"""
+        return Todo.objects.filter(
+            parent_todo_id=self.id,
+            is_deleted=False
+        ).order_by('-created_at')
+    
+    @property
+    def has_sub_todos(self):
+        """检查是否有子任务"""
+        return Todo.objects.filter(
+            parent_todo_id=self.id,
+            is_deleted=False
+        ).exists()

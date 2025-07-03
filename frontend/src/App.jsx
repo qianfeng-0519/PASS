@@ -50,7 +50,7 @@ function Sidebar() {
   ];
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
+    <div className="w-48 bg-gray-50 border-r border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
       {/* 导航菜单 */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -58,7 +58,7 @@ function Sidebar() {
             <li key={item.path}>
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
                   isActive(item.path)
                     ? 'bg-blue-100 text-blue-700 border border-blue-200'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
