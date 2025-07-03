@@ -14,6 +14,7 @@ function ChatBox() {
   const [loading, setLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState('DefaultAssistant'); // 新增AI人格状态
   const messagesEndRef = useRef(null);
   const isCreatingConversation = useRef(false); // 防止重复创建
 
@@ -103,8 +104,8 @@ function ChatBox() {
     }
   };
 
-  // 发送消息
-  const handleSendMessage = async (messageText) => {
+  // 发送消息（修改以支持persona参数）
+  const handleSendMessage = async (messageText, persona = selectedPersona) => {
     let conversationToUse = currentConversation;
     
     // 如果没有当前对话，先创建一个
@@ -143,7 +144,8 @@ function ChatBox() {
       setIsStreaming(true);
       setStreamingMessage('');
       
-      const response = await chatAPI.sendMessage(conversationToUse.id, messageText);
+      // 传递persona参数
+      const response = await chatAPI.sendMessage(conversationToUse.id, messageText, persona);
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       
@@ -220,7 +222,7 @@ function ChatBox() {
       {/* 主聊天区域 */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* 头部工具栏 */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
+        <div className="bg-white border-b border-gray-200 p-2 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <MessageSquare size={20} className="text-macos-blue" />
             <h2 className="font-semibold text-gray-800">
@@ -240,8 +242,8 @@ function ChatBox() {
           </div>
         </div>
 
-        {/* 消息区域 - 关键修改：固定高度和内部滚动 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+        {/* 消息区域 - 修改：移除固定高度，使用纯flex布局 */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {loading ? (
             <div className="flex justify-center items-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-macos-blue"></div>
@@ -315,6 +317,8 @@ function ChatBox() {
           <ChatInput
             onSendMessage={handleSendMessage}
             disabled={isStreaming}
+            selectedPersona={selectedPersona}
+            onPersonaChange={setSelectedPersona}
           />
         </div>
       </div>

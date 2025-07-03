@@ -252,7 +252,7 @@ export const chatAPI = {
   getMessages: (conversationId) => api.get(`/chat/${conversationId}/messages/`),
   
   // 发送消息（流式响应）
-  sendMessage: async (conversationId, message) => {
+  sendMessage: async (conversationId, message, persona = 'DefaultAssistant') => {
     const token = tokenManager.getAccessToken();
     const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/send_message/`, {
       method: 'POST',
@@ -260,7 +260,10 @@ export const chatAPI = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ 
+        message, 
+        persona 
+      }),
     });
     
     if (!response.ok) {

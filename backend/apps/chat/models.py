@@ -52,6 +52,13 @@ class ChatMessage(models.Model):
         ('assistant', 'AI助手'),
     ]
     
+    PERSONA_CHOICES = [
+        ('DefaultAssistant', '高效机器'),
+        ('LifeAssistant', '知心姐姐'),
+        ('MilitaryAssistant', '铁血军官'),
+        ('DevelopmentAssistant', '睿智博士'),
+    ]
+    
     conversation = models.ForeignKey(
         ChatConversation, 
         on_delete=models.CASCADE, 
@@ -64,6 +71,13 @@ class ChatMessage(models.Model):
         verbose_name="角色"
     )
     content = models.TextField(verbose_name="消息内容")
+    persona = models.CharField(
+        max_length=20,
+        choices=PERSONA_CHOICES,
+        default='DefaultAssistant',
+        verbose_name="AI人格",
+        help_text="仅对AI助手消息有效"
+    )
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="创建时间"
