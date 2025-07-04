@@ -78,6 +78,12 @@ class ChatMessage(models.Model):
         verbose_name="AI人格",
         help_text="仅对AI助手消息有效"
     )
+    referenced_todos = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="引用的Todo",
+        help_text="存储引用的todo列表，格式为[{id, title, type, priority, description}]"
+    )
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="创建时间"

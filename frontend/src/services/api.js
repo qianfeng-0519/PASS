@@ -199,6 +199,9 @@ export const todoAPI = {
   
   // 清除已完成的 todos
   clearCompleted: () => api.delete('/todos/clear_completed/'),
+  
+  // 获取可引用的todos（用于AI聊天引用）
+  getReferenceableTodos: () => api.get('/todos/referenceable_todos/'),
 };
 
 // 权限检查工具
@@ -251,8 +254,8 @@ export const chatAPI = {
   // 获取对话消息
   getMessages: (conversationId) => api.get(`/chat/${conversationId}/messages/`),
   
-  // 发送消息（流式响应）
-  sendMessage: async (conversationId, message, persona = 'DefaultAssistant') => {
+  // 发送消息（流式响应）- 支持todo引用
+  sendMessage: async (conversationId, message, persona = 'DefaultAssistant', referencedTodos = []) => {
     const token = tokenManager.getAccessToken();
     const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/send_message/`, {
       method: 'POST',
@@ -262,7 +265,8 @@ export const chatAPI = {
       },
       body: JSON.stringify({ 
         message, 
-        persona 
+        persona,
+        referenced_todos: referencedTodos
       }),
     });
     

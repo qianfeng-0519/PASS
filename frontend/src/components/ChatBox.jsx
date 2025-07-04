@@ -104,8 +104,8 @@ function ChatBox() {
     }
   };
 
-  // 发送消息（修改以支持persona参数）
-  const handleSendMessage = async (messageText, persona = selectedPersona) => {
+  // 发送消息（修改以支持persona参数和referenced_todos）
+  const handleSendMessage = async (messageText, persona = selectedPersona, referencedTodos = []) => {
     let conversationToUse = currentConversation;
     
     // 如果没有当前对话，先创建一个
@@ -144,8 +144,8 @@ function ChatBox() {
       setIsStreaming(true);
       setStreamingMessage('');
       
-      // 传递persona参数
-      const response = await chatAPI.sendMessage(conversationToUse.id, messageText, persona);
+      // 传递persona参数和referenced_todos参数
+      const response = await chatAPI.sendMessage(conversationToUse.id, messageText, persona, referencedTodos);
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       

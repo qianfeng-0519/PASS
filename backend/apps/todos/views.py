@@ -188,3 +188,50 @@ class TodoViewSet(viewsets.ModelViewSet):
             'message': f'已恢复 {restored_count} 个任务',
             'restored_count': restored_count
         })
+    
+    @action(detail=False, methods=['get'])
+    def referenceable_todos(self, request):
+        """获取可引用的todo列表（用于AI聊天引用）"""
+        user = request.user
+        
+        # 只返回当前用户创建的未完成且未删除的todo
+        todos = Todo.objects.filter(
+            created_by=user,
+            completed=False,
+            is_deleted=False
+        ).annotate(
+            priority_order=Case(
+                When(priority='high', then=1),
+                When(priority='medium', then=2),
+                When(priority='low', then=3),
+                When(priority='none', then=4),
+                default=4,
+                output_field=IntegerField()
+            )
+        ).order_by('priority_order', '-created_at')
+        
+        # 按todo_type分组
+        grouped_todos = {
+            'record': [],
+            'requirement': [],
+            'task': [],
+            'bug': []
+        }
+        
+        for todo in todos:
+            todo_data = {
+                'id': todo.id,
+                'title': todo.title,
+                'description': todo.description,
+                'priority': todo.priority,
+                'todo_type': todo.todo_type,
+                'created_at': todo.created_at
+            }
+            
+            if todo.todo_type in grouped_todos:
+                grouped_todos[todo.todo_type].append(todo_data)
+        
+        return Response({
+            'grouped_todos': grouped_todos,
+            'total_count': todos.count()
+        })

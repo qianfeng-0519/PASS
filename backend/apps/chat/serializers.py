@@ -2,11 +2,9 @@ from rest_framework import serializers
 from .models import ChatConversation, ChatMessage
 
 class ChatMessageSerializer(serializers.ModelSerializer):
-    """聊天消息序列化器"""
-    
     class Meta:
         model = ChatMessage
-        fields = ['id', 'role', 'content', 'created_at']
+        fields = ['id', 'role', 'content', 'persona', 'referenced_todos', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class ChatConversationSerializer(serializers.ModelSerializer):

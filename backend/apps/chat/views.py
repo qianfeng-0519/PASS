@@ -38,6 +38,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         conversation = self.get_object()
         user_message = request.data.get('message', '').strip()
         persona = request.data.get('persona', 'DefaultAssistant')
+        referenced_todos = request.data.get('referenced_todos', [])
         
         if not user_message:
             return Response(
@@ -50,7 +51,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             conversation=conversation,
             role='user',
             content=user_message,
-            persona=persona  # 保存用户选择人格
+            persona=persona,
+            referenced_todos=referenced_todos  # 保存引用的todos
         )
         
         # 更新对话标题（如果是第一条消息）
@@ -169,6 +171,26 @@ class ChatViewSet(viewsets.ModelViewSet):
             
             system_prompt = system_prompts.get(persona, system_prompts['DefaultAssistant'])
             
+            # 如果有引用的todos，添加到系统提示词中
+            if referenced_todos:
+                todo_context = "\n\n📋 **用户引用的Todo信息：**\n"
+                for todo in referenced_todos:
+                    todo_type_map = {
+                        'record': '📝 记录',
+                        'requirement': '📋 需求', 
+                        'task': '✅ 任务',
+                        'bug': '🐛 故障'
+                    }
+                    todo_type_display = todo_type_map.get(todo.get('type', ''), '📝')
+                    priority_display = '🔴 高' if todo.get('priority') == 'high' else '🟡 中' if todo.get('priority') == 'medium' else '🟢 低'
+                    
+                    todo_context += f"\n{todo_type_display} **{todo.get('title', '')}** ({priority_display})\n"
+                    if todo.get('description'):
+                        todo_context += f"描述：{todo.get('description')}\n"
+                
+                todo_context += "\n请在回复中适当参考这些Todo信息，为用户提供更有针对性的建议。"
+                system_prompt += todo_context
+            
             messages.append({
                 "role": "system",
                 "content": system_prompt.strip()
@@ -202,7 +224,7 @@ class ChatViewSet(viewsets.ModelViewSet):
                         conversation=conversation,
                         role='assistant',
                         content=full_response,
-                        persona=persona  # 保存AI人格信息
+                        persona=persona
                     )
                     
                     yield f"data: {json.dumps({'type': 'done', 'message_id': ai_msg.id})}\n\n"
@@ -216,7 +238,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             )
             response['Cache-Control'] = 'no-cache'
             response['Access-Control-Allow-Origin'] = '*'
-            response['X-Accel-Buffering'] = 'no'  # 可选：禁用nginx缓冲
+            response['X-Accel-Buffering'] = 'no'
             return response
             
         except Exception as e:
