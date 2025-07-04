@@ -13,6 +13,8 @@ import InformationCenter from './components/InformationCenter';
 import StrategicCenter from './components/StrategicCenter';
 import CommandCenter from './components/CommandCenter';
 import MaintenanceCenter from './components/MaintenanceCenter';
+// 导入图标
+import { Rocket, Info, Target, Command, Wrench } from 'lucide-react';
 import './App.css';
 
 // 顶部导航栏组件
@@ -42,11 +44,11 @@ function Sidebar() {
   const isActive = (path) => location.pathname === path;
 
   const menuItems = [
-    { path: '/bridge', label: '舰桥', icon: '🚀' },
-    { path: '/information', label: '信息中心', icon: '📊' },
-    { path: '/strategic', label: '战略中心', icon: '🎯' },
-    { path: '/command', label: '指挥中心', icon: '⚡' },
-    { path: '/maintenance', label: '维护中心', icon: '🔧' },
+    { path: '/bridge', label: '舰桥', icon: Rocket, bgColor: 'bg-gray-500' },
+    { path: '/information', label: '信息中心', icon: Info, bgColor: 'bg-blue-500' },
+    { path: '/strategic', label: '战略中心', icon: Target, bgColor: 'bg-green-500' },
+    { path: '/command', label: '指挥中心', icon: Command, bgColor: 'bg-yellow-500' },
+    { path: '/maintenance', label: '维护中心', icon: Wrench, bgColor: 'bg-red-500' },
   ];
 
   return (
@@ -54,21 +56,26 @@ function Sidebar() {
       {/* 导航菜单 */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <span className="mr-3 text-xl">{item.icon}</span>
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-lg ${item.bgColor} text-white mr-3`}>
+                    <IconComponent size={20} />
+                  </div>
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </div>

@@ -252,15 +252,16 @@ const CenterBase = ({
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-3 flex-shrink-0"
+          className="mb-2 flex-shrink-0"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`p-2 rounded-lg ${theme.primary} text-white`}>
-              <Icon size={24} />
+          <div className="flex items-center gap-3">
+            <div className={`p-1.5 rounded-lg ${theme.primary} text-white`}>
+              <Icon size={20} />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              <p className="text-gray-600 mt-1">{description}</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+              <span className="text-gray-500">•</span>
+              <p className="text-gray-600">{description}</p>
             </div>
           </div>
         </motion.div>

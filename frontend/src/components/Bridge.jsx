@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MessageSquare, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, MessageSquare, ChevronUp, ChevronDown, Rocket } from 'lucide-react';
 import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import ChatBox from './ChatBox';
@@ -77,7 +77,12 @@ function Bridge() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center mb-8"
               >
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">🚀 舰桥</h1>
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 rounded-lg bg-gray-500 text-white mr-3">
+                    <Rocket size={32} />
+                  </div>
+                  <h1 className="text-3xl font-bold text-gray-800">舰桥</h1>
+                </div>
                 <p className="text-gray-600">快速录入系统</p>
               </motion.div>
 
