@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from django.http import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 import json
 import os
-from openai import OpenAI
+# 修正导入：使用正确的Google GenAI SDK导入方式
+import google.genai as genai
 from .models import ChatConversation, ChatMessage
 from .serializers import (
     ChatConversationSerializer, 
@@ -52,7 +54,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             role='user',
             content=user_message,
             persona=persona,
-            referenced_todos=referenced_todos  # 保存引用的todos
+            referenced_todos=referenced_todos
         )
         
         # 更新对话标题（如果是第一条消息）
@@ -60,15 +62,10 @@ class ChatViewSet(viewsets.ModelViewSet):
             conversation.title = user_message[:50] + ('...' if len(user_message) > 50 else '')
             conversation.save()
         
-        # 调用火山引擎API
+        # 调用Gemini API
         try:
-            client = OpenAI(
-                base_url="https://ark.cn-beijing.volces.com/api/v3",
-                api_key="3876a9bd-7ef2-43ed-95bf-ef4b591dc7ce"
-            )
-            
-            # 构建对话历史
-            messages = []
+            # 创建Gemini客户端（按照测试成功的方式）
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
             
             # 根据人格选择系统提示词
             system_prompts = {
@@ -191,33 +188,36 @@ class ChatViewSet(viewsets.ModelViewSet):
                 todo_context += "\n请在回复中适当参考这些Todo信息，为用户提供更有针对性的建议。"
                 system_prompt += todo_context
             
-            messages.append({
-                "role": "system",
-                "content": system_prompt.strip()
-            })
+            # 构建对话历史内容
+            conversation_content = system_prompt + "\n\n"
             
             # 添加对话历史
             for msg in conversation.messages.all():
-                messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
+                if msg.role == "user":
+                    conversation_content += f"用户: {msg.content}\n"
+                elif msg.role == "assistant":
+                    conversation_content += f"助手: {msg.content}\n"
+            
+            # 添加当前用户消息
+            conversation_content += f"用户: {user_message}\n助手: "
             
             # 流式响应
             def generate_response():
                 try:
-                    stream = client.chat.completions.create(
-                        model="doubao-seed-1-6-250615",
-                        messages=messages,
-                        stream=True
+                    # 使用测试成功的API调用方式
+                    response = client.models.generate_content(
+                        model="gemini-2.5-pro",
+                        contents=conversation_content
                     )
                     
-                    full_response = ""
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            content = chunk.choices[0].delta.content
-                            full_response += content
-                            yield f"data: {json.dumps({'content': content, 'type': 'chunk'})}\n\n"
+                    # 获取完整响应
+                    full_response = response.text
+                    
+                    # 模拟流式输出（分块发送）
+                    chunk_size = 10  # 每次发送的字符数
+                    for i in range(0, len(full_response), chunk_size):
+                        chunk = full_response[i:i+chunk_size]
+                        yield f"data: {json.dumps({'content': chunk, 'type': 'chunk'})}\n\n"
                     
                     # 保存AI回复
                     ai_msg = ChatMessage.objects.create(

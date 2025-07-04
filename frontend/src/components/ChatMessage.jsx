@@ -26,7 +26,7 @@ function ChatMessage({ message, isUser }) {
         }`}
       >
         <div className={`text-sm whitespace-pre-wrap ${
-          isUser ? 'text-right' : 'text-left'
+          isUser ? 'text-left' : 'text-left'
         }`}>{message.content}</div>
         <div className={`text-xs mt-1 opacity-70 ${
           isUser ? 'text-blue-100 text-right' : 'text-gray-500 text-left'

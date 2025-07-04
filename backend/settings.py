@@ -160,3 +160,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False # More secure default
 # If you need to allow all origins for development, you can temporarily set this to True
 # or preferably manage this through environment-specific settings.
+
+# 在settings.py文件末尾添加
+import os
+
+# Gemini API配置
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyAt0snBCLlxelA1NpI9DQt0ayMnTKrLMss')

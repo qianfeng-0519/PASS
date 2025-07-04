@@ -55,6 +55,12 @@ function ChatInput({ onSendMessage, disabled = false, selectedPersona, onPersona
     const messageText = message.trim();
     setMessage('');
     setIsLoading(true);
+    
+    // 重置输入框高度
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = '40px'; // 重置为初始高度
+    }
   
     try {
       // 传递引用的todos给父组件
