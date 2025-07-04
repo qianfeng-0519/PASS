@@ -20,7 +20,7 @@ function TopNavbar() {
   const { user } = useAuth();
   
   return (
-    <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-6">
       {/* 左侧标题和欢迎信息 */}
       <div className="flex items-center space-x-4">
         <h1 className="text-2xl font-semibold text-gray-800">PASS-星舰</h1>

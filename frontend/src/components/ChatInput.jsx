@@ -52,7 +52,7 @@ function ChatInput({ onSendMessage, disabled = false, selectedPersona, onPersona
             onKeyPress={handleKeyPress}
             placeholder="输入消息..."
             disabled={disabled || isLoading}
-            className="w-full resize-none border border-gray-200 rounded-macos pl-32 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-macos-blue focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 overflow-hidden"
+            className="w-full resize-none border border-gray-200 rounded-macos pl-32 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-macos-blue focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 overflow-hidden flex items-center"
             rows={1}
             style={{
               minHeight: '40px',
