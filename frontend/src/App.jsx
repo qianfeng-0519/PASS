@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import Login from './components/Login';
@@ -14,7 +14,7 @@ import StrategicCenter from './components/StrategicCenter';
 import CommandCenter from './components/CommandCenter';
 import MaintenanceCenter from './components/MaintenanceCenter';
 // 导入图标
-import { Rocket, Info, Target, Command, Wrench } from 'lucide-react';
+import { Rocket, Info, Target, Command, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
 import './App.css';
 
 // 顶部导航栏组件
@@ -38,7 +38,7 @@ function TopNavbar() {
 }
 
 // 侧边栏导航组件（移除Todo列表）
-function Sidebar() {
+function Sidebar({ isVisible, onToggle }) {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
@@ -50,6 +50,10 @@ function Sidebar() {
     { path: '/command', label: '指挥中心', icon: Command, bgColor: 'bg-yellow-500' },
     { path: '/maintenance', label: '维护中心', icon: Wrench, bgColor: 'bg-red-500' },
   ];
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="w-48 bg-gray-50 border-r border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
@@ -78,6 +82,33 @@ function Sidebar() {
           })}
         </ul>
       </nav>
+      
+      {/* 隐藏导航栏按钮 */}
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+        >
+          <ChevronLeft size={16} className="mr-2" />
+          隐藏导航栏
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// 隐藏状态下的展开按钮
+function ExpandButton({ onClick }) {
+  return (
+    <div className="relative">
+      <button
+        onClick={onClick}
+        className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white px-1 py-2 rounded-r-lg shadow-lg transition-colors z-10"
+        title="显示导航栏"
+        style={{ left: '0px' }}
+      >
+        <ChevronRight size={20} />
+      </button>
     </div>
   );
 }
@@ -180,10 +211,15 @@ function MainContent() {
 function AppLayout() {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // 不需要侧边栏的页面
   const noSidebarPages = ['/login', '/register'];
   const showSidebar = user && !noSidebarPages.includes(location.pathname);
+
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
 
   if (loading) {
     return (
@@ -199,8 +235,16 @@ function AppLayout() {
       {user && !noSidebarPages.includes(location.pathname) && <TopNavbar />}
       
       {/* 主体内容区域 - 添加高度限制和溢出控制 */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {showSidebar && <Sidebar />}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {showSidebar && (
+          <Sidebar 
+            isVisible={sidebarVisible} 
+            onToggle={toggleSidebar}
+          />
+        )}
+        {showSidebar && !sidebarVisible && (
+          <ExpandButton onClick={toggleSidebar} />
+        )}
         <MainContent />
       </div>
     </div>
