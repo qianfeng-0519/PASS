@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, MessageSquare, ChevronUp, ChevronDown, Rocket } from 'lucide-react';
 import { todoAPI } from '../services/api';
@@ -11,7 +11,8 @@ function Bridge() {
   const [newTodoType, setNewTodoType] = useState('record');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [isChatExpanded, setIsChatExpanded] = useState(false); // ChatBox展开状态
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
+  const inputRef = useRef(null); // 添加输入框引用
   
   // 定义类型选项
   const todoTypes = [
@@ -40,6 +41,13 @@ function Bridge() {
       // 清空表单
       setNewTodo('');
       setNewTodoType('record');
+      
+      // 重新聚焦到输入框
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
       
     } catch (error) {
       console.error('添加 todo 失败:', error);
@@ -96,6 +104,7 @@ function Bridge() {
                 <form onSubmit={handleAddTodo} className="mb-4">
                   <div className="flex gap-3">
                     <input
+                      ref={inputRef} // 添加ref引用
                       type="text"
                       value={newTodo}
                       onChange={(e) => setNewTodo(e.target.value)}
