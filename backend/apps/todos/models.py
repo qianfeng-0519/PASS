@@ -14,6 +14,37 @@ class Todo(models.Model):
         ('issue', '故障'),
     ]
     
+    # 状态选择 - 根据类型动态显示
+    STATUS_CHOICES = {
+        'record': [
+            ('pending', '待阅'),
+            ('archived', '归档'),
+        ],
+        'requirement': [
+            ('pending_evaluation', '待评估'),
+            ('decomposed', '已拆解'),
+            ('rejected', '已拒绝'),
+        ],
+        'task': [
+            ('todo', '待办'),
+            ('on_hold', '搁置'),
+            ('cancelled', '取消'),
+            ('completed', '完成'),
+        ],
+        'issue': [
+            ('reported', '报告'),
+            ('reproduced', '复现'),
+            ('fixing', '修复'),
+            ('resolved', '解决'),
+            ('closed', '关闭'),
+        ]
+    }
+    
+    # 获取所有状态选择（用于数据库字段定义）
+    ALL_STATUS_CHOICES = []
+    for type_statuses in STATUS_CHOICES.values():
+        ALL_STATUS_CHOICES.extend(type_statuses)
+    
     # 添加优先级选择
     PRIORITY_CHOICES = [
         ('high', '高'),
@@ -42,6 +73,23 @@ class Todo(models.Model):
         verbose_name="类型",
         help_text="todo类型"
     )
+    
+    # 新增状态字段
+    # 移除数据库字段的默认值
+    status = models.CharField(
+        max_length=30,
+        choices=ALL_STATUS_CHOICES,
+        blank=True,  # 允许为空
+        verbose_name="状态",
+        help_text="任务状态"
+    )
+    
+    # 修改save方法
+    def save(self, *args, **kwargs):
+        """保存时自动设置默认状态"""
+        if not self.status:  # 当status为空或空字符串时
+            self.status = self.get_default_status_for_type(self.todo_type)
+        super().save(*args, **kwargs)
     
     # 新增优先级字段
     priority = models.CharField(
@@ -84,6 +132,7 @@ class Todo(models.Model):
             models.Index(fields=['todo_type']),
             models.Index(fields=['parent_todo_id']),  # 父todo ID索引
             models.Index(fields=['priority']),  # 优先级索引
+            models.Index(fields=['status']),  # 状态索引
         ]
     
     def __str__(self):
@@ -91,7 +140,9 @@ class Todo(models.Model):
     
     @property
     def status_display(self):
-        return "已完成" if self.completed else "未完成"
+        """获取状态显示名称"""
+        all_choices = dict(self.ALL_STATUS_CHOICES)
+        return all_choices.get(self.status, self.status)
     
     @property
     def type_display(self):
@@ -105,6 +156,21 @@ class Todo(models.Model):
     def priority_weight(self):
         """获取优先级权重，用于排序"""
         return self.PRIORITY_WEIGHTS.get(self.priority, 999)
+    
+    @property
+    def available_statuses(self):
+        """获取当前类型可用的状态选项"""
+        return self.STATUS_CHOICES.get(self.todo_type, [])
+    
+    def get_default_status_for_type(self, todo_type):
+        """获取指定类型的默认状态"""
+        defaults = {
+            'record': 'pending',
+            'requirement': 'pending_evaluation', 
+            'task': 'todo',
+            'issue': 'reported'
+        }
+        return defaults.get(todo_type, 'pending')
     
     def soft_delete(self):
         """软删除"""

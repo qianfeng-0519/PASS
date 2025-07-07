@@ -4,6 +4,7 @@ import { Search, Filter, RefreshCw, Check, Trash2, RotateCcw, Edit3, Save, X, Pl
 import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import PriorityTag from './PriorityTag';
+import StatusTag from './StatusTag';
 
 const CenterBase = ({ 
   title, 
@@ -22,7 +23,7 @@ const CenterBase = ({
   // 新增状态：选中的todo和详情卡片相关状态
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'none' });
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'none', status: '' });
   const [showNewSubTodoModal, setShowNewSubTodoModal] = useState(false); // 弹出框状态
   const [newSubTodoForm, setNewSubTodoForm] = useState({ title: '', description: '', todo_type: 'record', priority: 'none' });
 
@@ -42,6 +43,45 @@ const CenterBase = ({
     { value: 'none', label: '无' }
   ];
 
+  // 添加状态配置 - 与后端保持同步
+  const statusConfig = {
+    record: [
+      { value: 'pending', label: '待阅' },
+      { value: 'archived', label: '归档' }
+    ],
+    requirement: [
+      { value: 'pending_evaluation', label: '待评估' },
+      { value: 'decomposed', label: '已拆解' },
+      { value: 'rejected', label: '已拒绝' }
+    ],
+    task: [
+      { value: 'todo', label: '待办' },
+      { value: 'on_hold', label: '搁置' },
+      { value: 'cancelled', label: '取消' },
+      { value: 'completed', label: '完成' }
+    ],
+    issue: [
+      { value: 'reported', label: '报告' },
+      { value: 'reproduced', label: '复现' },
+      { value: 'fixing', label: '修复' },
+      { value: 'resolved', label: '解决' },
+      { value: 'closed', label: '关闭' }
+    ]
+  };
+
+  // 创建状态映射表用于快速查找显示名称
+  const allStatusMap = {};
+  Object.values(statusConfig).forEach(statuses => {
+    statuses.forEach(status => {
+      allStatusMap[status.value] = status.label;
+    });
+  });
+
+  // 获取状态显示名称的辅助函数
+  const getStatusDisplay = (statusValue) => {
+    return allStatusMap[statusValue] || statusValue;
+  };
+  
   // 颜色主题配置
   const colorThemes = {
     blue: {
@@ -163,7 +203,8 @@ const CenterBase = ({
       setEditForm({ 
         title: todo.title, 
         description: todo.description || '',
-        priority: todo.priority || 'none'
+        priority: todo.priority || 'none',
+        status: todo.status || ''
       });
       setIsEditing(false);
     }
@@ -180,24 +221,36 @@ const CenterBase = ({
     setEditForm({ 
       title: selectedTodo.title, 
       description: selectedTodo.description || '',
-      priority: selectedTodo.priority || 'none'
+      priority: selectedTodo.priority || 'none',
+      status: selectedTodo.status || ''
     });
   };
   
-  // 保存编辑
+  // 修改 handleSaveEdit 函数
   const handleSaveEdit = async () => {
     try {
       const updateData = {
         title: editForm.title,
         description: editForm.description,
-        priority: editForm.priority
+        priority: editForm.priority,
+        status: editForm.status
       };
       
-      await todoAPI.updateTodo(selectedTodo.id, updateData);
+      const response = await todoAPI.updateTodo(selectedTodo.id, updateData);
       
-      // 更新本地状态
-      const updatedTodo = { ...selectedTodo, ...updateData };
-      setSelectedTodo(updatedTodo);
+      // 使用API返回的完整数据更新selectedTodo，确保包含最新的status_display
+      if (response.data) {
+        setSelectedTodo(response.data);
+      } else {
+        // 如果API没有返回完整数据，手动更新并计算status_display
+        const updatedTodo = { 
+          ...selectedTodo, 
+          ...updateData,
+          status_display: getStatusDisplay(updateData.status)
+        };
+        setSelectedTodo(updatedTodo);
+      }
+      
       setIsEditing(false);
       
       // 刷新列表
@@ -243,6 +296,13 @@ const CenterBase = ({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+    // 从后端数据获取可用状态选项
+  // 修改 getAvailableStatuses 函数
+  const getAvailableStatuses = (todoType) => {
+  // 使用前端配置而不是从后端获取
+  return statusConfig[todoType] || [];
   };
 
   return (
@@ -511,6 +571,22 @@ const CenterBase = ({
                       </div>
                     )}
 
+                    {/* 状态 - 仅在编辑模式下显示 */}
+                    {isEditing && (
+                      <div>
+                        <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">状态：</label>
+                        <select
+                          value={editForm.status}
+                          onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                          className="macos-input w-full"
+                        >
+                          {getAvailableStatuses(selectedTodo.todo_type).map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     {/* 基本信息 */}
                     <div>
                       <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">基本信息：</label>
@@ -531,6 +607,17 @@ const CenterBase = ({
                             }`}></div>
                             <span className="text-sm">{selectedTodo.completed ? '已完成' : '进行中'}</span>
                           </div>
+                          
+                          {/* 状态标签 */}
+                          {selectedTodo.status && (
+                            <div>
+                              <StatusTag 
+                                status={getStatusDisplay(selectedTodo.status)}
+                                todoType={selectedTodo.todo_type} 
+                                size="sm" 
+                              />
+                            </div>
+                          )}
                           
                           {/* 优先级 */}
                           <div>
