@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MessageSquare, ChevronUp, ChevronDown, Rocket } from 'lucide-react';
-import { todoAPI } from '../services/api';
+import { Plus, MessageSquare, ChevronUp, ChevronDown, Rocket, Zap } from 'lucide-react';
+import { todoAPI, quickTaskConfigAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import ChatBox from './ChatBox';
 
@@ -12,7 +12,9 @@ function Bridge() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [isChatExpanded, setIsChatExpanded] = useState(false);
-  const inputRef = useRef(null); // 添加输入框引用
+  const [quickConfigs, setQuickConfigs] = useState([]);
+  const [quickTaskLoading, setQuickTaskLoading] = useState({});
+  const inputRef = useRef(null);
   
   // 定义类型选项
   const todoTypes = [
@@ -21,6 +23,40 @@ function Bridge() {
     { value: 'task', label: '任务', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'issue', label: '故障', color: 'bg-red-100 text-red-800' }
   ];
+
+  // 加载快捷任务配置
+  const loadQuickConfigs = async () => {
+    try {
+      const response = await quickTaskConfigAPI.getActiveConfigs();
+      setQuickConfigs(response.data);
+    } catch (error) {
+      console.error('加载快捷任务配置失败:', error);
+    }
+  };
+
+  // 执行快捷任务
+  const handleQuickTask = async (config) => {
+    setQuickTaskLoading(prev => ({ ...prev, [config.id]: true }));
+    try {
+      const response = await quickTaskConfigAPI.generateTodo(config.id);
+      const todo = response.data.todo; // 修改这里：访问嵌套的todo对象
+      
+      // 显示成功消息
+      const typeLabel = todoTypes.find(t => t.value === todo.todo_type)?.label || '任务';
+      setSuccessMessage(`快捷${typeLabel}"${todo.title}"已成功创建`);
+      
+    } catch (error) {
+      console.error('创建快捷任务失败:', error);
+      setSuccessMessage('创建快捷任务失败，请重试');
+    } finally {
+      setQuickTaskLoading(prev => ({ ...prev, [config.id]: false }));
+    }
+  };
+
+  // 组件加载时获取快捷配置
+  useEffect(() => {
+    loadQuickConfigs();
+  }, []);
 
   // 添加新 todo
   const handleAddTodo = async (e) => {
@@ -104,7 +140,7 @@ function Bridge() {
                 <form onSubmit={handleAddTodo} className="mb-4">
                   <div className="flex gap-3">
                     <input
-                      ref={inputRef} // 添加ref引用
+                      ref={inputRef}
                       type="text"
                       value={newTodo}
                       onChange={(e) => setNewTodo(e.target.value)}
@@ -113,7 +149,6 @@ function Bridge() {
                       disabled={loading}
                       autoFocus
                     />
-                    {/* 类型选择下拉框 */}
                     <select
                       value={newTodoType}
                       onChange={(e) => setNewTodoType(e.target.value)}
@@ -144,6 +179,34 @@ function Bridge() {
                     </button>
                   </div>
                 </form>
+
+                {/* 快捷任务按钮区域 - 移动到这里 */}
+                {quickConfigs.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {quickConfigs.map((config) => (
+                        <button
+                          key={config.id}
+                          onClick={() => handleQuickTask(config)}
+                          disabled={quickTaskLoading[config.id]}
+                          className={`px-3 py-2 text-sm rounded-macos border transition-colors ${
+                            quickTaskLoading[config.id]
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                          }`}
+                          title={config.description || config.title}
+                        >
+                          {quickTaskLoading[config.id] ? (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+                              <span>创建中...</span>
+                            </div>
+                          ) : (
+                            config.name
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                )}
 
                 {/* 成功消息 */}
                 <AnimatePresence>

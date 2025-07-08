@@ -19,11 +19,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from backend.apps.todos import views as todo_views
 from backend.apps.chat import views as chat_views
+from backend.apps.todos.views import TodoViewSet, QuickTaskConfigViewSet
 
 # API Router
 router = DefaultRouter()
 router.register(r'todos', todo_views.TodoViewSet, basename='todo')
 router.register(r'chat', chat_views.ChatViewSet, basename='chat')  # 新增chat路由
+router.register(r'quick-task-configs', QuickTaskConfigViewSet, basename='quicktaskconfig')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

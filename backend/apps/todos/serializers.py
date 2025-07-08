@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Todo
+from .models import Todo, QuickTaskConfig
 
 class TodoSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
@@ -53,3 +53,49 @@ class TodoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f'无效的状态值: {attrs["status"]}')
         
         return attrs
+
+
+class QuickTaskConfigSerializer(serializers.ModelSerializer):
+    """快捷任务配置序列化器"""
+    
+    todo_type_display = serializers.CharField(source='get_todo_type_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+    
+    class Meta:
+        model = QuickTaskConfig
+        fields = [
+            'id', 'name', 'title', 'description', 'todo_type', 'todo_type_display',
+            'priority', 'priority_display', 'is_active', 'created_by', 'created_by_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+    
+    def validate_name(self, value):
+        """验证配置名称唯一性"""
+        user = self.context['request'].user
+        queryset = QuickTaskConfig.objects.filter(created_by=user, name=value)
+        
+        # 如果是更新操作，排除当前对象
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        
+        if queryset.exists():
+            raise serializers.ValidationError("您已经有同名的快捷任务配置了")
+        
+        return value
+    
+    def create(self, validated_data):
+        """创建时自动设置创建者"""
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class QuickTaskConfigCreateTodoSerializer(serializers.Serializer):
+    """根据快捷任务配置创建todo的序列化器"""
+    
+    def create(self, validated_data):
+        """根据配置创建todo"""
+        config = self.context['config']
+        user = self.context['request'].user
+        return config.create_todo(user)

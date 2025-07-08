@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q, Case, When, IntegerField
-from .models import Todo
-from .serializers import TodoSerializer
+from .models import Todo, QuickTaskConfig
+from .serializers import TodoSerializer, QuickTaskConfigSerializer, QuickTaskConfigCreateTodoSerializer
 from backend.apps.users.views import IsAdminUser # Import IsAdminUser
 
 
@@ -235,3 +235,53 @@ class TodoViewSet(viewsets.ModelViewSet):
             'grouped_todos': grouped_todos,
             'total_count': todos.count()
         })
+
+
+class QuickTaskConfigViewSet(viewsets.ModelViewSet):
+    """快捷任务配置视图集"""
+    serializer_class = QuickTaskConfigSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """只返回当前用户的配置"""
+        return QuickTaskConfig.objects.filter(created_by=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def generate_todo(self, request, pk=None):
+        """根据配置生成新的todo"""
+        config = self.get_object()
+        
+        # 检查配置是否启用
+        if not config.is_active:
+            return Response(
+                {'error': '此快捷任务配置已被禁用'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # 创建todo
+            todo = config.create_todo(request.user)
+            
+            # 返回创建的todo数据
+            todo_serializer = TodoSerializer(todo)
+            return Response({
+                'message': f'快捷任务"{config.name}"已成功创建',
+                'todo': todo_serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'创建任务失败: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['get'])
+    def active_configs(self, request):
+        """获取当前用户的所有启用配置（用于舰桥页面显示）"""
+        configs = self.get_queryset().filter(is_active=True)
+        serializer = self.get_serializer(configs, many=True)
+        return Response(serializer.data)
+    
+    def perform_create(self, serializer):
+        """创建时自动设置创建者"""
+        serializer.save(created_by=self.request.user)

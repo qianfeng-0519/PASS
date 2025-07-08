@@ -284,5 +284,26 @@ export const chatAPI = {
   updateConversation: (id, data) => api.put(`/chat/${id}/`, data),
 };
 
+// 快捷任务配置 API
+export const quickTaskConfigAPI = {
+  // 获取所有配置
+  getConfigs: (params = {}) => api.get('/quick-task-configs/', { params }),
+  
+  // 获取启用的配置（用于舰桥页面）
+  getActiveConfigs: () => api.get('/quick-task-configs/active_configs/'),
+  
+  // 创建新配置
+  createConfig: (data) => api.post('/quick-task-configs/', data),
+  
+  // 更新配置
+  updateConfig: (id, data) => api.put(`/quick-task-configs/${id}/`, data),
+  
+  // 删除配置
+  deleteConfig: (id) => api.delete(`/quick-task-configs/${id}/`),
+  
+  // 根据配置生成todo
+  generateTodo: (configId) => api.post(`/quick-task-configs/${configId}/generate_todo/`),
+};
+
 export { tokenManager };
 export default api;

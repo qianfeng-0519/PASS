@@ -7,6 +7,7 @@ import UserProfile from './components/UserProfile';
 import Bridge from './components/Bridge';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/AdminDashboard';
+import ConfigManagement from './components/ConfigManagement';
 import UserAvatar from './components/UserAvatar';
 // 导入四个中心页面组件
 import InformationCenter from './components/InformationCenter';
@@ -14,7 +15,7 @@ import StrategicCenter from './components/StrategicCenter';
 import CommandCenter from './components/CommandCenter';
 import MaintenanceCenter from './components/MaintenanceCenter';
 // 导入图标
-import { Rocket, Info, Target, Command, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Rocket, Info, Target, Command, Wrench, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import './App.css';
 
 // 顶部导航栏组件
@@ -37,7 +38,7 @@ function TopNavbar() {
   );
 }
 
-// 侧边栏导航组件（移除Todo列表）
+// 侧边栏导航组件
 function Sidebar({ isVisible, onToggle }) {
   const location = useLocation();
 
@@ -49,6 +50,7 @@ function Sidebar({ isVisible, onToggle }) {
     { path: '/strategic', label: '战略中心', icon: Target, bgColor: 'bg-green-500' },
     { path: '/command', label: '指挥中心', icon: Command, bgColor: 'bg-yellow-500' },
     { path: '/maintenance', label: '维护中心', icon: Wrench, bgColor: 'bg-red-500' },
+    { path: '/config-management', label: '配置管理', icon: Settings, bgColor: 'bg-purple-500' },
   ];
 
   if (!isVisible) {
@@ -113,7 +115,7 @@ function ExpandButton({ onClick }) {
   );
 }
 
-// 主内容区组件（移除Todo路由）
+// 主内容区组件
 function MainContent() {
   return (
     <div className="flex-1 bg-white overflow-auto">
@@ -171,6 +173,18 @@ function MainContent() {
             element={
               <ProtectedRoute>
                 <MaintenanceCenter />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* 配置管理页面 */}
+          <Route 
+            path="/config-management" 
+            element={
+              <ProtectedRoute>
+                <div className="h-full p-8">
+                  <ConfigManagement />
+                </div>
               </ProtectedRoute>
             } 
           />

@@ -206,3 +206,108 @@ class Todo(models.Model):
             parent_todo_id=self.id,
             is_deleted=False
         ).exists()
+
+
+class QuickTaskConfig(models.Model):
+    """快捷任务配置模型"""
+    
+    name = models.CharField(
+        max_length=50, 
+        verbose_name="配置名称",
+        help_text="快捷任务名称，将作为按钮显示文字"
+    )
+    
+    title = models.CharField(
+        max_length=200, 
+        verbose_name="任务标题模板",
+        help_text="任务标题模板，支持变量如{date}, {time}, {user}"
+    )
+    
+    description = models.TextField(
+        blank=True, 
+        verbose_name="任务描述模板",
+        help_text="任务描述模板，支持变量替换"
+    )
+    
+    todo_type = models.CharField(
+        max_length=20,
+        choices=Todo.TYPE_CHOICES,
+        default='record',
+        verbose_name="任务类型",
+        help_text="快捷任务的类型"
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=Todo.PRIORITY_CHOICES,
+        default='medium',
+        verbose_name="优先级",
+        help_text="快捷任务的优先级"
+    )
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='quick_task_configs',
+        verbose_name="创建用户",
+        help_text="配置的创建者"
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="是否启用",
+        help_text="是否在舰桥页面显示此快捷按钮"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "快捷任务配置"
+        verbose_name_plural = "快捷任务配置"
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['todo_type']),
+        ]
+        # 确保同一用户下配置名称唯一
+        unique_together = ['created_by', 'name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_todo_type_display()})"
+    
+    def generate_todo_data(self, user):
+        """根据配置生成todo数据，支持模板变量替换"""
+        from datetime import datetime
+        import re
+        
+        # 定义可用的模板变量
+        variables = {
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'time': datetime.now().strftime('%H:%M'),
+            'datetime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+            'user': user.nickname if hasattr(user, 'nickname') else user.username,
+            'username': user.username,
+        }
+        
+        # 替换模板变量
+        title = self.title
+        description = self.description
+        
+        for var, value in variables.items():
+            title = title.replace(f'{{{var}}}', str(value))
+            description = description.replace(f'{{{var}}}', str(value))
+        
+        return {
+            'title': title,
+            'description': description,
+            'todo_type': self.todo_type,
+            'priority': self.priority,
+            'created_by': user
+        }
+    
+    def create_todo(self, user):
+        """根据配置创建新的todo"""
+        todo_data = self.generate_todo_data(user)
+        return Todo.objects.create(**todo_data)
