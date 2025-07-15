@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import { MacosInput } from './ui';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -53,29 +54,29 @@ const Login = () => {
             </div>
           )}
           
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <input
+              <MacosInput
                 id="username"
                 name="username"
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="用户名"
                 value={formData.username}
                 onChange={handleChange}
+                className="w-full"
               />
             </div>
             <div>
-              <input
+              <MacosInput
                 id="password"
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="密码"
                 value={formData.password}
                 onChange={handleChange}
+                className="w-full"
               />
             </div>
           </div>

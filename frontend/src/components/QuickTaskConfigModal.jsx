@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Save, HelpCircle } from 'lucide-react';
 import { quickTaskConfigAPI } from '../services/api';
+import { MacosSelect, MacosInput, MacosTextarea } from './ui';
 
 function QuickTaskConfigModal({ config, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -181,11 +182,11 @@ function QuickTaskConfigModal({ config, onSave, onCancel }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               配置名称 <span className="text-red-500">*</span>
             </label>
-            <input
+            <MacosInput
               type="text"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              className={`macos-input w-full ${errors.name ? 'border-red-300' : ''}`}
+              className={`w-full ${errors.name ? 'border-red-300' : ''}`}
               placeholder="输入配置名称（将作为按钮显示文字）"
               maxLength={50}
             />
@@ -199,11 +200,11 @@ function QuickTaskConfigModal({ config, onSave, onCancel }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               任务标题模板 <span className="text-red-500">*</span>
             </label>
-            <input
+            <MacosInput
               type="text"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              className={`macos-input w-full ${errors.title ? 'border-red-300' : ''}`}
+              className={`w-full ${errors.title ? 'border-red-300' : ''}`}
               placeholder="例如：{date} 日报 - {user}"
               maxLength={200}
             />
@@ -217,10 +218,10 @@ function QuickTaskConfigModal({ config, onSave, onCancel }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               任务描述模板
             </label>
-            <textarea
+            <MacosTextarea
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              className={`macos-input w-full h-18 resize-none ${errors.description ? 'border-red-300' : ''}`}
+              className={`w-full h-18 resize-none ${errors.description ? 'border-red-300' : ''}`}
               placeholder="输入任务描述模板（可选）"
               maxLength={1000}
             />
@@ -235,33 +236,23 @@ function QuickTaskConfigModal({ config, onSave, onCancel }) {
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 任务类型
               </label>
-              <select
+              <MacosSelect
                 value={formData.todo_type}
                 onChange={(e) => handleChange('todo_type', e.target.value)}
-                className="macos-input flex-1"
-              >
-                {todoTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+                options={todoTypes}
+                className="flex-1"
+              />
             </div>
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 优先级
               </label>
-              <select
+              <MacosSelect
                 value={formData.priority}
                 onChange={(e) => handleChange('priority', e.target.value)}
-                className="macos-input flex-1"
-              >
-                {priorities.map((priority) => (
-                  <option key={priority.value} value={priority.value}>
-                    {priority.label}
-                  </option>
-                ))}
-              </select>
+                options={priorities}
+                className="flex-1"
+              />
             </div>
           </div>
 

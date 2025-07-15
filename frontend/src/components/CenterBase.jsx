@@ -5,6 +5,8 @@ import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import PriorityTag from './PriorityTag';
 import StatusTag from './StatusTag';
+// 导入新的统一组件
+import { MacosSelect, MacosInput, MacosTextarea } from './ui';
 
 const CenterBase = ({ 
   title, 
@@ -371,12 +373,12 @@ const CenterBase = ({
             <div className="flex flex-col sm:flex-row gap-3 mb-4 flex-shrink-0">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-macos-gray-400" size={16} />
-                <input
+                <MacosInput
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="搜索任务..."
-                  className="macos-input pl-9 py-2"
+                  className="pl-9 py-2"
                 />
               </div>
               <div className="flex gap-2">
@@ -598,15 +600,12 @@ const CenterBase = ({
                     {isEditing && (
                       <div>
                         <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">优先级：</label>
-                        <select
+                        <MacosSelect
                           value={editForm.priority}
                           onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                          className="macos-input w-full"
-                        >
-                          {priorityOptions.map(option => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
+                          options={priorityOptions}
+                          className="w-full"
+                        />
                       </div>
                     )}
 
@@ -614,15 +613,12 @@ const CenterBase = ({
                     {isEditing && (
                       <div>
                         <label className="block text-base font-bold text-macos-gray-800 mb-2 text-left">状态：</label>
-                        <select
+                        <MacosSelect
                           value={editForm.status}
                           onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                          className="macos-input w-full"
-                        >
-                          {getAvailableStatuses(selectedTodo.todo_type).map(option => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
+                          options={getAvailableStatuses(selectedTodo.todo_type)}
+                          className="w-full"
+                        />
                       </div>
                     )}
 
@@ -733,11 +729,11 @@ const CenterBase = ({
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-macos-gray-700 mb-1">标题 *</label>
-                    <input
+                    <MacosInput
                       type="text"
                       value={newSubTodoForm.title}
                       onChange={(e) => setNewSubTodoForm({ ...newSubTodoForm, title: e.target.value })}
-                      className="macos-input w-full"
+                      className="w-full"
                       placeholder="请输入关联任务标题"
                       autoFocus
                     />
@@ -745,38 +741,32 @@ const CenterBase = ({
                   
                   <div>
                     <label className="block text-sm font-medium text-macos-gray-700 mb-1">描述</label>
-                    <textarea
+                    <MacosTextarea
                       value={newSubTodoForm.description}
                       onChange={(e) => setNewSubTodoForm({ ...newSubTodoForm, description: e.target.value })}
-                      className="macos-input w-full h-20 resize-none"
+                      className="w-full h-20 resize-none"
                       placeholder="请输入关联任务描述（可选）"
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-macos-gray-700 mb-1">类型</label>
-                    <select
+                    <MacosSelect
                       value={newSubTodoForm.todo_type}
                       onChange={(e) => setNewSubTodoForm({ ...newSubTodoForm, todo_type: e.target.value })}
-                      className="macos-input w-full"
-                    >
-                      {todoTypes.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </select>
+                      options={todoTypes}
+                      className="w-full"
+                    />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-macos-gray-700 mb-1">优先级</label>
-                    <select
+                    <MacosSelect
                       value={newSubTodoForm.priority}
                       onChange={(e) => setNewSubTodoForm({ ...newSubTodoForm, priority: e.target.value })}
-                      className="macos-input w-full"
-                    >
-                      {priorityOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
+                      options={priorityOptions}
+                      className="w-full"
+                    />
                   </div>
                 </div>
                 

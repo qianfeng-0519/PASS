@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 import { Users, Search, MoreVertical, Shield, ShieldOff, Trash2, BarChart3, Key, UserCog } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
+import MacosSelect from './ui/MacosSelect';
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -304,15 +305,16 @@ function AdminDashboard() {
                 />
               </div>
             </div>
-            <select
+            <MacosSelect
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">所有用户</option>
-              <option value="active">活跃用户</option>
-              <option value="inactive">非活跃用户</option>
-            </select>
+              options={[
+                { value: 'all', label: '所有用户' },
+                { value: 'active', label: '活跃用户' },
+                { value: 'inactive', label: '非活跃用户' }
+              ]}
+              className="w-48"
+            />
           </div>
         </div>
 

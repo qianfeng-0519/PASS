@@ -4,6 +4,7 @@ import { Plus, MessageSquare, ChevronUp, ChevronDown, Rocket, Zap } from 'lucide
 import { todoAPI, quickTaskConfigAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import ChatBox from './ChatBox';
+import { MacosSelect, MacosInput } from './ui';
 
 function Bridge() {
   const { user } = useAuth();
@@ -139,28 +140,23 @@ function Bridge() {
                 {/* 录入表单 */}
                 <form onSubmit={handleAddTodo} className="mb-4">
                   <div className="flex gap-3">
-                    <input
+                    <MacosInput
                       ref={inputRef}
                       type="text"
                       value={newTodo}
                       onChange={(e) => setNewTodo(e.target.value)}
                       placeholder="添加新任务..."
-                      className="macos-input flex-1"
+                      className="flex-1"
                       disabled={loading}
                       autoFocus
                     />
-                    <select
+                    <MacosSelect
                       value={newTodoType}
                       onChange={(e) => setNewTodoType(e.target.value)}
-                      className="macos-input w-24 text-sm"
+                      options={todoTypes}
+                      className="w-24 text-sm"
                       disabled={loading}
-                    >
-                      {todoTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
                     <button
                       type="submit"
                       disabled={loading || !newTodo.trim()}

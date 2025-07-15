@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import { MacosInput } from './ui';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -102,15 +103,16 @@ const Register = () => {
           
           <div className="space-y-4">
             <div>
-              <input
+              <MacosInput
                 id="username"
                 name="username"
                 type="text"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.username ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="用户名"
                 value={formData.username}
                 onChange={handleChange}
+                error={!!errors.username}
+                className="w-full"
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-red-600">{errors.username}</p>
@@ -118,32 +120,33 @@ const Register = () => {
             </div>
 
             <div>
-              <input
+              <MacosInput
                 id="email"
                 name="email"
                 type="email"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="邮箱地址"
                 value={formData.email}
                 onChange={handleChange}
+                error={!!errors.email}
+                className="w-full"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
 
-            {/* 添加nickname字段 */}
             <div>
-              <input
+              <MacosInput
                 id="nickname"
                 name="nickname"
                 type="text"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.nickname ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="昵称"
                 value={formData.nickname}
                 onChange={handleChange}
+                error={!!errors.nickname}
+                className="w-full"
               />
               {errors.nickname && (
                 <p className="mt-1 text-sm text-red-600">{errors.nickname}</p>
@@ -151,15 +154,16 @@ const Register = () => {
             </div>
 
             <div>
-              <input
+              <MacosInput
                 id="password"
                 name="password"
                 type="password"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="密码"
                 value={formData.password}
                 onChange={handleChange}
+                error={!!errors.password}
+                className="w-full"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -167,14 +171,15 @@ const Register = () => {
             </div>
 
             <div>
-              <input
+              <MacosInput
                 name="confirm_password"
                 type="password"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.confirm_password ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="确认密码"
                 value={formData.confirm_password}
                 onChange={handleChange}
+                error={!!errors.confirm_password}
+                className="w-full"
               />
               {errors.confirm_password && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirm_password}</p>
