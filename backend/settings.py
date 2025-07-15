@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     # Local apps
     'backend.apps.todos',
     'backend.apps.users',
-    'backend.apps.chat',  # 新增chat应用
+    'backend.apps.chat',
+    'backend.apps.scheduler',  # ✨ 新增调度器应用
 ]
 
 MIDDLEWARE = [
@@ -166,3 +167,27 @@ import os
 
 # Gemini API配置
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyAt0snBCLlxelA1NpI9DQt0ayMnTKrLMss')
+
+# 在文件末尾添加日志配置
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/scheduler.log',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'backend.apps.scheduler': {  # 更新logger名称
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

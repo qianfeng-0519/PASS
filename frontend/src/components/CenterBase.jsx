@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, RefreshCw, Check, Trash2, RotateCcw, Edit3, Save, X, Plus, Calendar, User } from 'lucide-react';
+import { Search, Filter, RefreshCw, Check, Trash2, RotateCcw, Edit3, Save, X, Plus, Calendar, User, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { todoAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 import PriorityTag from './PriorityTag';
@@ -26,6 +26,13 @@ const CenterBase = ({
   const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'none', status: '' });
   const [showNewSubTodoModal, setShowNewSubTodoModal] = useState(false); // 弹出框状态
   const [newSubTodoForm, setNewSubTodoForm] = useState({ title: '', description: '', todo_type: 'record', priority: 'none' });
+
+  // 新增：统计数据状态
+  const [statistics, setStatistics] = useState({
+    newTodosLast7Days: 12,
+    completedTodosLast7Days: 8,
+    pendingTodos: 0
+  });
 
   // 定义类型选项
   const todoTypes = [
@@ -116,6 +123,17 @@ const CenterBase = ({
 
   const theme = colorThemes[color];
 
+  // 新增：计算统计数据的函数
+  const calculateStatistics = (todos) => {
+    const pendingCount = todos.filter(todo => !todo.completed && !todo.is_deleted).length;
+    
+    setStatistics({
+      newTodosLast7Days: 12, // 固定测试值
+      completedTodosLast7Days: 8, // 固定测试值
+      pendingTodos: pendingCount // 使用真实的待完成数量
+    });
+  };
+
   // 获取数据
   const fetchTodos = async () => {
     try {
@@ -135,13 +153,15 @@ const CenterBase = ({
       const data = response.data;
       
       // 处理不同的API响应格式
+      let todoList = [];
       if (Array.isArray(data)) {
-        setTodos(data);
+        todoList = data;
       } else if (data.results) {
-        setTodos(data.results);
-      } else {
-        setTodos([]);
+        todoList = data.results;
       }
+      
+      setTodos(todoList);
+      calculateStatistics(todoList); // 计算统计数据
     } catch (error) {
       console.error('获取数据失败:', error);
     } finally {
@@ -195,19 +215,32 @@ const CenterBase = ({
     }
   };
 
-  // 选择todo
+  // 修改：选择todo的逻辑，支持取消选中
   const handleSelectTodo = (todo) => {
     // 只有未完成且未删除的todo可以选择
     if (!todo.completed && !todo.is_deleted) {
-      setSelectedTodo(todo);
-      setEditForm({ 
-        title: todo.title, 
-        description: todo.description || '',
-        priority: todo.priority || 'none',
-        status: todo.status || ''
-      });
-      setIsEditing(false);
+      // 如果点击的是已选中的todo，则取消选中
+      if (selectedTodo && selectedTodo.id === todo.id) {
+        setSelectedTodo(null);
+        setIsEditing(false);
+      } else {
+        // 选中新的todo
+        setSelectedTodo(todo);
+        setEditForm({ 
+          title: todo.title, 
+          description: todo.description || '',
+          priority: todo.priority || 'none',
+          status: todo.status || ''
+        });
+        setIsEditing(false);
+      }
     }
+  };
+
+  // 新增：关闭详情的函数
+  const handleCloseDetail = () => {
+    setSelectedTodo(null);
+    setIsEditing(false);
   };
 
     // 开始编辑
@@ -394,9 +427,6 @@ const CenterBase = ({
                       return (
                         <motion.div
                           key={todo.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
                           className={`flex items-center gap-2 px-3 py-2 rounded-macos border transition-all ${
                             isSelected
                               ? 'bg-macos-blue bg-opacity-10 border-macos-blue'
@@ -477,10 +507,11 @@ const CenterBase = ({
           >
             {selectedTodo ? (
               <>
-                {/* 详情卡片头部 - 固定高度 */}
+                {/* 修改：详情卡片头部 - 添加关闭按钮 */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-macos-gray-200 flex-shrink-0">
                   <h3 className="text-lg font-semibold text-macos-gray-800">信息详情</h3>
                   <div className="flex gap-2">
+
                     {!isEditing ? (
                       <>
                         <button
@@ -496,6 +527,14 @@ const CenterBase = ({
                           title="新建关联任务"
                         >
                           <Plus size={16} />
+                        </button>
+                        {/* 关闭按钮 */}
+                        <button
+                          onClick={handleCloseDetail}
+                          className="p-2 rounded-macos bg-macos-gray-100 text-macos-gray-600 hover:bg-macos-gray-200 transition-all"
+                          title="关闭详情"
+                        >
+                          <X size={16} />
                         </button>
                       </>
                     ) : (
@@ -549,7 +588,7 @@ const CenterBase = ({
                           placeholder="请输入任务描述"
                         />
                       ) : (
-                        <p className="text-macos-gray-800 bg-macos-gray-50 p-2 rounded-macos min-h-[60px]">
+                        <p className="text-macos-gray-800 bg-macos-gray-50 p-2 rounded-macos min-h-[60px] whitespace-pre-wrap text-left">
                           {selectedTodo.description || '暂无描述'}
                         </p>
                       )}
@@ -630,14 +669,34 @@ const CenterBase = ({
                 </div>
               </>
             ) : (
-              /* 未选中任何todo时的提示 */
-              <div className="flex-1 flex items-center justify-center text-center">
-                <div className="text-macos-gray-500">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-macos-gray-100 rounded-full flex items-center justify-center">
-                    <Icon size={24} className="text-macos-gray-400" />
+              /* 修改：替换为统计数据背景板 */
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center max-w-md w-full">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6">数据概览</h3>
+                  
+                  {/* 紧凑统计卡片 */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* 近7天新增 */}
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600 mb-1">{statistics.newTodosLast7Days}</div>
+                        <div className="text-sm text-gray-600">近7天新增</div>
+                      </div>
+                      
+                      {/* 近7天完成 */}
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600 mb-1">{statistics.completedTodosLast7Days}</div>
+                        <div className="text-sm text-gray-600">近7天完成</div>
+                      </div>
+                      
+                      {/* 当前待完成 */}
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600 mb-1">{statistics.pendingTodos}</div>
+                        <div className="text-sm text-gray-600">当前待完成</div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-lg font-medium mb-2">选择一个任务</p>
-                  <p className="text-sm">点击左侧未完成的任务查看详情</p>
+
                 </div>
               </div>
             )}
