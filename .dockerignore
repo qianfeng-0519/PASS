@@ -1,0 +1,62 @@
+# Git 相关
+.git
+.gitignore
+
+# 文档
+README.md
+docs/
+
+# Docker 相关
+docker/
+Dockerfile*
+.dockerignore
+
+# 前端构建产物和依赖（只排除不必要的部分）
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+package.json
+package-lock.json
+node_modules/
+
+# Python 相关
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+.tox/
+.cache
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+
+# IDE 相关
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# 部署相关
+.vercel/
+
+# 其他配置
+pyproject.toml

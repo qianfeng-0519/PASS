@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 # It's recommended to load the secret key from an environment variable
 # Example: SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'a-default-fallback-key-if-not-set')
-SECRET_KEY = 'django-insecure-mv4jjws+m#t7v+)!na0cgkdh*@gqxvch!=*wlm8oj+j5_@+d(s'  # Keep original for now, user must change
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-development-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Recommended: DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
@@ -15,7 +16,7 @@ DEBUG = True # Default to False for production readiness
 
 # ALLOWED_HOSTS should be configured for your production domain(s)
 # Example: ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
-ALLOWED_HOSTS = ['localhost', '127.0.0.1'] # Example, adjust as needed
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -162,11 +163,13 @@ CORS_ALLOW_ALL_ORIGINS = False # More secure default
 # If you need to allow all origins for development, you can temporarily set this to True
 # or preferably manage this through environment-specific settings.
 
-# 在settings.py文件末尾添加
-import os
+
 
 # Gemini API配置
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyAt0snBCLlxelA1NpI9DQt0ayMnTKrLMss')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is required")
 
 # 在文件末尾添加日志配置
 LOGGING = {
