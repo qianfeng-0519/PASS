@@ -1,18 +1,17 @@
 
+
 services:
   backend:
     build:
       context: ..
       dockerfile: docker/backend.Dockerfile
-    container_name: pass-backend
+    container_name: pass-backend-test
     env_file:
       - ../.env
     environment:
-      - DEBUG=False
-      - SECRET_KEY=django-insecure-mv4jjws+m#t7v+)!na0cgkdh*@gqxvch!=*wlm8oj+j5_@+d(s
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,116.62.41.141
-      - GEMINI_API_KEY=AIzaSyAt0snBCLlxelA1NpI9DQt0ayMnTKrLMss
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - DEBUG=True  # 本地调试模式
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
     volumes:
       - ../logs:/app/logs
       - ../db.sqlite3:/app/db.sqlite3
@@ -28,7 +27,7 @@ services:
       dockerfile: docker/frontend.Dockerfile
       args:
         - VITE_API_BASE_URL=http://backend:8000/api
-    container_name: pass-frontend
+    container_name: pass-frontend-test
     ports:
       - "3000:3000"
     depends_on:

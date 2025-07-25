@@ -1,0 +1,50 @@
+
+
+services:
+  backend:
+    env_file:
+      - ../.env
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+      platforms:
+        - "linux/amd64"  # 兼容 x86_64 服务器
+        - "linux/arm64"  # 兼容 ARM 服务器（如阿里云 ECS a1 系列）
+    image: ${DOCKER_REGISTRY}/${NAMESPACE}/pass-backend:${IMAGE_TAG}
+    container_name: pass-backend-prod
+    environment:
+      - DEBUG=False  # 生产环境禁用调试
+      - ALLOWED_HOSTS=116.62.41.141,backend  # 仅允许生产 IP 和容器内部通信
+      - CORS_ALLOWED_ORIGINS=http://116.62.41.141:3000  # 仅允许生产前端域名
+    volumes:
+      - ../logs:/app/logs:Z
+      - backend_data:/app/data
+      - backend_static:/app/static
+      - backend_media:/app/media
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    env_file:
+      - ../.env
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://116.62.41.141:8000/api
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
+    image: ${DOCKER_REGISTRY}/${NAMESPACE}/pass-frontend:${IMAGE_TAG}
+    container_name: pass-frontend-prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_data:
+  backend_static:
+  backend_media:

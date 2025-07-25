@@ -38,8 +38,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,7 +76,7 @@ AUTH_USER_MODEL = 'users.User'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'data' / 'db.sqlite3',
     }
 }
 
@@ -155,6 +155,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000", # For local development React frontend
     "http://localhost:5173", # For Vite development server
     "http://127.0.0.1:5173", # For Vite development server
+    "http://116.62.41.141:3000", # 生产环境前端地址
 ]
 
 CORS_ALLOW_CREDENTIALS = True
